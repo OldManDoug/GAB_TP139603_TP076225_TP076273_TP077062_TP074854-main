@@ -1,0 +1,4 @@
+ID,Dimensions(cm),content,weight(KG)
+P001 50,XXXXX,0.5
+P002,500,Red colored gecko,0.9
+P003,
