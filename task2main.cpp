@@ -2,6 +2,7 @@
 #include <string>
 #include<fstream>
 #include "Activityrecordmanager.hpp"
+#include "History.hpp"
 using namespace std;
 //MENU HELPERS
 // readChoice - read one menu number; returns -1 if the input is not a number
@@ -17,7 +18,7 @@ int readChoice() {
 }
 
 // ARRAY PART 
-void menu(){
+int main(){
 int choice;
     do {
         cout << "\n===== Product Smart Management System =====" <<endl;
@@ -35,7 +36,8 @@ int choice;
 
         switch (choice) {
             case 1:
-             Stackdo();
+           //  Stackdo();
+           read();
                 break;
             case 2:
                // showDataset(datasetB, "Dataset B details","dataset2facility_b.csv" );
@@ -69,6 +71,7 @@ int choice;
 
         }
     } while (choice != 0);
+    return 0;
 }
 
 

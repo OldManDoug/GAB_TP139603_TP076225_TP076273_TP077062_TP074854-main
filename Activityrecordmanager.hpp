@@ -12,7 +12,7 @@ review by staff(need their input from a file storing names)-- what happen to a p
 reverse a decision[use an if else])
 1. Record Parcel-Related Activities 
 Record important activities performed during parcel processing, with sufficient information to 
-identify the parcel, activity and relevant time or sequence. 
+identify the parcel, activity and relevant time or sequence. -- when array storr
 2. Display Activity History 
 Allow staff to display recent activities and the activity history for a selected parcel, including 
 the order in which activities occurred. 
@@ -39,91 +39,53 @@ status.
 - concepts apply: undoing, pop and push(redo and undo)
 - use array programming is easier than linky list. 
 ---- USE STACK PROGRAMMING FOR THE MODULE--- from AI suggestible 
+
+So use a arrays, but each number represents a parcel content
 */
-// https://www.geeksforgeeks.org/cpp/stack-implementation-in-cpp/
-// Define Stack class
+// https://codesignal.com/learn/courses/fundamental-data-structures-stacks-and-queues-in-cpp/lessons/understanding-and-implementing-stacks-in-cpp
+
+// Define Stack class 
+
 class Stack {
-private:
-    // Index of the top element in the stack
     int top;
-    // Array to store stack elements, with a capacity of 100
-    // elements, which are files 
-    int arr[100];
-
+    int* arr;
+    int capacity;
 public:
-    // Constructor to initialize an empty stack
-    Stack() { top = -1; }
-
-    // Function to add an element x to the top of the stack
-    void push(int x)
-    {
-        // If the stack is full, print "Stack overflow" and
-        // return
-        if (top >= 99) {
-            cout << "Stack overflow" << endl;
+    Stack(int size) : capacity(size), top(-1) {
+        arr = new int[capacity];
+    }
+    ~Stack() { delete[] arr; }
+    void push(int x) {
+        if (top == capacity - 1) {
+            cout << "Stack overflow\n";
             return;
         }
-        // Add element to the top of the stack and increment
-        // top
         arr[++top] = x;
-        cout << "Pushed " << x << " to stack\n";
     }
-
-    // Function to remove the top element from the stack
-    int pop()
-    {
-        // If the stack is empty, print "Stack underflow"
-        // and return 0
-        if (top < 0) {
-            cout << "Stack underflow" << endl;
-            return 0;
-        }
-        // Remove the top element from the stack and
-        // decrement top
-        return arr[top--];
+    //https://www.geeksforgeeks.org/dsa/implement-stack-using-array/
+    void pop() {
+    if (top == 0)
+        cout << "\n## Stack is Empty!";
+    else {
+        --top;
+        cout << "\n## Position : " << top << ", Popped Value  :" << arr[top];
     }
-
-    // Function to return the top element of the stack
-    int peek()
-    {
-        // If the stack is empty, print "Stack is empty" and
-        // return 0
-        if (top < 0) {
-            cout << "Stack is empty" << endl;
-            return 0;
+} //https://www.cpp.thiyagaraaj.com/data-structures-in-c/stack-programs/simple-stack-program-using-functions-in-c-programming
+      
+        
+    
+    int peek() {
+        if (top == -1) {
+            cout << "Stack is empty\n";
+            return -1;
         }
-        // Return the top element of the stack
         return arr[top];
     }
-
-    // Function to check if the stack is empty
-    bool isEmpty()
-    {
-        // Return true if the stack is empty (i.e., top is
-        // -1)
-        return (top < 0);
-    }
+    bool isEmpty() { return top == -1; }
 };
-
-void Stackdo(){
-    // Create a stack
-    Stack s;
-    // take from files
-    fstream("productdetail.txt");
-    // Push elements into the stack
-    s.push(10);
-    s.push(20);
-    s.push(30);
-    // Print the top element of the stack
-    cout << "Top element is: " << s.peek() << endl;
-    // Print all elements in the stack
-    cout << "Elements present in stack : ";
-    // While the stack is not empty
-    while (!s.isEmpty()) {
-        // Pop the top element from the stack and print it
-        cout << s.pop() << " ";
-    }
-}
-// https://www.cpp.thiyagaraaj.com/data-structures-in-c/stack-programs/simple-stack-program-example-using-class-in-c
-
-//another stack for history checking
+//operation of stacks, but solve issues related..
+// display history can be done with stack to display(peek operation)
+// to undo a action/history use a POP 
+// Record parcel acvitivty use the PUSH
+//Retrieve and review ( ig push and pop or display from stack/peek )
+// Empty or nullcases use isEmpty() function for stack -- also error handling in stack research on. 
