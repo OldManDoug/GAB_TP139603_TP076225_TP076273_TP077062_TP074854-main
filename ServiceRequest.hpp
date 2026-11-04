@@ -1,6 +1,8 @@
 #ifndef SERVICEREQUEST_HPP
 #define SERVICEREQUEST_HPP
-
+#include <iostream>
+#include <fstream>
+#include <cstring>
 // TASK 2 - Parcel Service and Collection Management Module
 // Data structure: PRIORITY QUEUE (array, requests kept in arrival order)
 //   enqueue = add at the rear               -> O(1)
@@ -8,9 +10,7 @@
 //             remove it, shift the rest left -> O(n)
 // Same idea as the Week 8 emergency room example.
 
-#include <iostream>
-#include <fstream>
-#include <cstring>
+
 using namespace std;
 
 #define MAX_REQUESTS 100
