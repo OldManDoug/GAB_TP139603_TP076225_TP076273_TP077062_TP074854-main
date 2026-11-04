@@ -1,4 +1,3 @@
-ID,Dimensions(cm),content,weight(KG)
-P001 50,XXXXX,0.5
-P002,500,Red colored gecko,0.9
-P003,
+parcelId, activityDescription, timestamp, previousStatus, newStatus, isReversible, isReversed
+(string)      (string)            (int)          (bool or enum?)             (boolean)   (bool)        (bool?)
+P001,Long cannonn,1240,False,True,True,True

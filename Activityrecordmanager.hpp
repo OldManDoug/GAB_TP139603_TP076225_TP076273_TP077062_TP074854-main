@@ -45,22 +45,37 @@ So use a arrays, but each number represents a parcel content
 // https://codesignal.com/learn/courses/fundamental-data-structures-stacks-and-queues-in-cpp/lessons/understanding-and-implementing-stacks-in-cpp
 
 // Define Stack class 
-
+struct Activity {
+    int activityId;
+    char parcelId[30];
+    char description[100];
+    int sequence;
+    char previousStatus[30];
+    char newStatus[30];
+    bool isReversible;
+    bool isReversed;
+};// structure for the parcel
 class Stack {
     int top;
     int* arr;
     int capacity;
+    int history;
 public:
     Stack(int size) : capacity(size), top(-1) {
         arr = new int[capacity];
     }
     ~Stack() { delete[] arr; }
-    void push(int x) {
+    //to push, into a file then into the stack a history 
+    void push(int history) {
+
         if (top == capacity - 1) {
             cout << "Stack overflow\n";
             return;
+        }else{
+
+            ifstream();
         }
-        arr[++top] = x;
+        arr[++top] = history;
     }
     //https://www.geeksforgeeks.org/dsa/implement-stack-using-array/
     void pop() {
@@ -83,6 +98,7 @@ public:
     }
     bool isEmpty() { return top == -1; }
 };
+
 //operation of stacks, but solve issues related..
 // display history can be done with stack to display(peek operation)
 // to undo a action/history use a POP 

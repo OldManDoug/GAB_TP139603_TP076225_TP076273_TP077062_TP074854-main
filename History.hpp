@@ -5,16 +5,8 @@
 using namespace std;
 /* Simple Stack Program Example Using Functions in C++*/
 /* Data Structure Programs,Stack Programs,C++ Examples */
-
-#include<iostream>
-
-#include<stdio.h>
-#include<conio.h>
-#include<stdlib.h>
-
 #define MAX_SIZE 5
 
-using namespace std;
 
 int item, choice, i;
 int arr_stack[MAX_SIZE];
@@ -77,3 +69,49 @@ cout << "\nSimple Stack Example - Array and Functions - C++";
 
 }
 
+template <typename T, size_t Capacity = 100>
+class SafeStack {
+private:
+    T data[Capacity];
+    int topIndex;
+
+public:
+    SafeStack() : topIndex(-1) {}
+
+    bool empty() const { return topIndex < 0; }
+    bool full() const { return topIndex >= static_cast<int>(Capacity) - 1; }
+
+    // Returns true if successful, false if overflow occurs
+    bool push(const T& value) {
+        if (full()) {
+            return false; // Error handled silently or logged
+        }
+        data[++topIndex] = value;
+        return true;
+    }
+
+    // Returns true if successful, false if underflow occurs
+    bool pop(T& removedValue) {
+        if (empty()) {
+            return false; 
+        }
+        removedValue = data[topIndex--];
+        return true;
+    }
+};
+
+void part() { // this is error handling to use in parcel
+    SafeStack<int, 2> stack;
+
+    if (!stack.push(50)) {
+        std::cout << "Push failed: Stack is full.\n";
+    }
+
+    int val;
+    if (!stack.pop(val)) {
+        std::cout << "Pop failed: Stack is empty.\n";
+    } else {
+        std::cout << "Popped: " << val << "\n";
+    }
+
+}

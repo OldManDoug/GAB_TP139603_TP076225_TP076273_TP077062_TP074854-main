@@ -3,8 +3,9 @@
 #include<fstream>
 #include "Activityrecordmanager.hpp"
 #include "History.hpp"
+
 using namespace std;
-//MENU HELPERS
+//MENU HELPERS6
 // readChoice - read one menu number; returns -1 if the input is not a number
 int readChoice() {
     int choice;
@@ -17,60 +18,90 @@ int readChoice() {
     return choice;
 }
 
-// ARRAY PART 
-int main(){
-int choice;
+ 
+
+// ==========================================
+// Interactive Console Menu Driver
+// ==========================================
+int main() {
+   
+    int choice;
+    char parcelId[30];
+    char desc[100];
+    char prevStatus[30];
+    char newStatus[30];
+    int reversibleInt;
+    int actId;
+
     do {
-        cout << "\n===== Product Smart Management System =====" <<endl;
-        cout << "1. Display Dataset A" <<endl;
-        cout << "2. Display Dataset B" <<endl;
-        cout << "3. Display Dataset C" <<endl;
-        cout << "4. Age group and billing analysis" <<endl;
-        cout << "5. Healthcare expenditure analysis" <<endl;
-        cout << "6. Sorting experiments (insertion sort vs merge sort)" <<endl;
-        cout << "7. Searching experiments (unsorted vs sorted)" <<endl;
-        cout << "8. Clinical insights" <<endl;
-        cout << "0. Back" <<endl;
-        cout << "Choose an option (0-8): ";
-        choice = readChoice();
+        cout << "\n========================================\n";
+        cout << "   PARCEL ACTIVITY MODULE (NO STL)      \n";
+        cout << "========================================\n";
+        cout << "1. Record Activity\n";
+        cout << "2. Display Activity History\n";
+        cout << "3. Review Specific Activity Details\n";
+        std::cout << "4. Reverse/Undo Most Recent Activity\n";
+        std::cout << "5. Exit\n";
+        std::cout << "Enter your choice (1-5): ";
+        std::cin >> choice;
 
         switch (choice) {
-            case 1:
-           //  Stackdo();
-           read();
+            case 1: //improve by writing to a file
+            do{
+                cout << "Enter Parcel ID: ";
+                cin >> parcelId;
+            }while(parcelId != 0);
+            do{
+                cout << "Enter Activity Description: ";
+                cin.ignore();
+                cin.getline(desc, 100);
+                if(desc == ""){
+cout << "Please do not description as blank";
+                }}while(desc != "");
+
+                cout << "Enter Previous Status (e.g., Registered): ";
+                cin >> prevStatus;
+                if(prevStatus == ""){
+                    cout << "Previous syayis cannot be empty";
+                }
+
+                cout << "Enter New Status (e.g., Dispatched): ";
+                cin >> newStatus;
+                cout << "Is Reversible? (1 for Yes, 0 for No): ";
+                cin >> reversibleInt;
+               // module.recordActivity(parcelId, desc, prevStatus, newStatus, (reversibleInt != 0));
                 break;
+//add error handling
             case 2:
-               // showDataset(datasetB, "Dataset B details","dataset2facility_b.csv" );
+                cout << "Enter Parcel ID to display history: ";
+                cin >> parcelId;
+               // module.displayHistory(parcelId);
+                part(); //can use the push part here. 
                 break;
+
             case 3:
-               // showDataset(datasetC, "Dataset C details", "dataset3facility_c.csv");
-                break; 
+                cout << "Enter Parcel ID: ";
+                cin >> parcelId;
+                cout << "Enter Activity ID to review: ";
+                cin >> actId;
+                //module.reviewActivity(parcelId, actId);
+                break;
+
             case 4:
-                
+            cout << "Enter Parcel ID to reverse last activity: ";
+            cin >> parcelId;
+               // module.reverseRecentActivity(parcelId);
                 break;
 
             case 5:
-                
-
-            case 6:
-                
+                std::cout << "Exiting program. Goodbye!\n";
                 break;
 
-            case 7:
-                
-                break;
-
-            case 8:
-                
-                break;
-
-            case 0: break;
-
-            default: 
-            cout << "Invalid choice, try again." <<endl;
-
+            default:
+                std::cout << "[Exception] Invalid menu selection. Please choose between 1 and 5.\n";
         }
-    } while (choice != 0);
+    } while (choice != 5);
+
     return 0;
 }
 
