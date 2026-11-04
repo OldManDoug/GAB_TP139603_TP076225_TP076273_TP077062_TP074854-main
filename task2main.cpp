@@ -3,6 +3,7 @@
 #include<fstream>
 #include "Activityrecordmanager.hpp"
 #include "History.hpp"
+#include "ServiceRequest.hpp"
 
 using namespace std;
 //MENU HELPERS6
@@ -18,91 +19,93 @@ int readChoice() {
     return choice;
 }
 
- 
 
-// ==========================================
-// Interactive Console Menu Driver
-// ==========================================
-int main() {
-   
+
+// TASK 2 MENU - Parcel Service and Collection Management Module
+void task2Menu() {
     int choice;
-    char parcelId[30];
-    char desc[100];
-    char prevStatus[30];
-    char newStatus[30];
-    int reversibleInt;
-    int actId;
 
     do {
-        cout << "\n========================================\n";
-        cout << "   PARCEL ACTIVITY MODULE (NO STL)      \n";
-        cout << "========================================\n";
-        cout << "1. Record Activity\n";
-        cout << "2. Display Activity History\n";
-        cout << "3. Review Specific Activity Details\n";
-        std::cout << "4. Reverse/Undo Most Recent Activity\n";
-        std::cout << "5. Exit\n";
-        std::cout << "Enter your choice (1-5): ";
-        std::cin >> choice;
+
+        cout << "\n===== Task 2: Service Request Management =====" << endl;
+        cout << "1. Create service request" << endl;
+        cout << "2. Display active requests" << endl;
+        cout << "3. Show next request" << endl;
+        cout << "4. Process next request" << endl;
+        cout << "5. Cancel request by ID" << endl;
+        cout << "6. Search request" << endl;
+        cout << "7. Display finished requests" << endl;
+        cout << "0. Back" << endl;
+        cout << "Choose an option (0-7): ";
+        choice = readChoice();
+
+        switch (choice) {
+            case 1: createRequest();           break;
+            case 2: displayActiveRequests();   break;
+            case 3: showNextRequest();         break;
+            case 4: processNextRequest();      break;
+            case 5: cancelRequestById();       break;
+            case 6: searchRequest();           break;
+            case 7: displayFinishedRequests(); break;
+            case 0: break;
+            default: cout << "Invalid choice, try again." << endl;
+        }
+    } while (choice != 0);
+}
+
+
+// ARRAY PART 
+int main(){
+int choice;
+ServiceRequest h;
+    do {
+        cout << "\n===== Product Smart Management System main menu =====" <<endl;
+        cout << "1. Go to task 1" <<endl;
+        cout << "2. Go to task 2" <<endl;
+        cout << "3. Go to task 3" <<endl;
+        cout << "4. Go to task 4" <<endl;
+        cout << "5. Go to task 5" <<endl;
+        cout << "0. Exit System" <<endl;
+        cout << "Choose an option (0-5): ";
+        choice = readChoice();
 
         switch (choice) {
             case 1: //improve by writing to a file
-            do{
-                cout << "Enter Parcel ID: ";
-                cin >> parcelId;
-            }while(parcelId != 0);
-            do{
-                cout << "Enter Activity Description: ";
-                cin.ignore();
-                cin.getline(desc, 100);
-                if(desc == ""){
-cout << "Please do not description as blank";
-                }}while(desc != "");
+            
+           
 
                 cout << "Enter Previous Status (e.g., Registered): ";
-                cin >> prevStatus;
-                if(prevStatus == ""){
+              //  cin >> prevStatus;
+               /* if(prevStatus == ""){
                     cout << "Previous syayis cannot be empty";
-                }
+                }*/
 
                 cout << "Enter New Status (e.g., Dispatched): ";
-                cin >> newStatus;
+                //cin >> newStatus;
                 cout << "Is Reversible? (1 for Yes, 0 for No): ";
-                cin >> reversibleInt;
+             //   cin >> reversibleInt;
                // module.recordActivity(parcelId, desc, prevStatus, newStatus, (reversibleInt != 0));
                 break;
 //add error handling
             case 2:
-                cout << "Enter Parcel ID to display history: ";
-                cin >> parcelId;
-               // module.displayHistory(parcelId);
-                part(); //can use the push part here. 
+        task2Menu();
                 break;
 
             case 3:
-                cout << "Enter Parcel ID: ";
-                cin >> parcelId;
-                cout << "Enter Activity ID to review: ";
-                cin >> actId;
-                //module.reviewActivity(parcelId, actId);
-                break;
-
+               // showDataset(datasetC, "Dataset C details", "dataset3facility_c.csv");
+                break; 
             case 4:
-            cout << "Enter Parcel ID to reverse last activity: ";
-            cin >> parcelId;
-               // module.reverseRecentActivity(parcelId);
+                
                 break;
 
             case 5:
-                std::cout << "Exiting program. Goodbye!\n";
-                break;
+                
+            case 0: break;
 
-            default:
-                std::cout << "[Exception] Invalid menu selection. Please choose between 1 and 5.\n";
+            default: 
+            cout << "Invalid choice, please enter a value between 0 - 5" <<endl;
+//error handling messages
         }
-    } while (choice != 5);
-
+    } while (choice != 0);
     return 0;
 }
-
-
