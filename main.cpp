@@ -32,21 +32,23 @@ void task2Menu() {
         cout << "2. Display active requests" << endl;
         cout << "3. Show next request" << endl;
         cout << "4. Process next request" << endl;
-        cout << "5. Cancel request by ID" << endl;
-        cout << "6. Search request" << endl;
-        cout << "7. Display finished requests" << endl;
+        cout << "5. Process selected request by ID" << endl;
+        cout << "6. Cancel request by ID" << endl;
+        cout << "7. Search request" << endl;
+        cout << "8. Display finished requests" << endl;
         cout << "0. Back" << endl;
-        cout << "Choose an option (0-7): ";
+        cout << "Choose an option (0-8): ";
         choice = readChoice();
 
         switch (choice) {
             case 1: createRequest();           break;
             case 2: displayActiveRequests();   break;
             case 3: showNextRequest();         break;
-            case 4: processNextRequest();      break;
-            case 5: cancelRequestById();       break;
-            case 6: searchRequest();           break;
-            case 7: displayFinishedRequests(); break;
+            case 4: nextRequest();      break;
+            case 5: selectRequest();       break;
+            case 6: cancelRequest();       break;
+            case 7: searchRequest();           break;
+            case 8: displayFinishRequests(); break;
             case 0: break;
             default: cout << "Invalid choice, try again." << endl;
         }
@@ -57,7 +59,7 @@ void task2Menu() {
 // ARRAY PART 
 int main(){
 int choice;
-ServiceRequest h;
+loadRequests();   // task 2, read servicerequest.txt when program starts
     do {
         cout << "\n===== Product Smart Management System main menu =====" <<endl;
         cout << "1. Go to task 1" <<endl;
@@ -88,7 +90,7 @@ ServiceRequest h;
                 break;
 //add error handling
             case 2:
-        task2Menu();
+                task2Menu();
                 break;
 
             case 3:
@@ -99,7 +101,7 @@ ServiceRequest h;
                 break;
 
             case 5:
-                
+                break;
             case 0: break;
 
             default: 
@@ -107,5 +109,6 @@ ServiceRequest h;
 //error handling messages
         }
     } while (choice != 0);
+    saveRequests();   // task 2, write servicerequest.txt before exit
     return 0;
 }
