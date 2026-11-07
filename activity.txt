@@ -1,0 +1,2 @@
+1|P1001|Registered Parcel|None|Registered|1|0
+1|P1001|Delivered|None|Registered|1|0

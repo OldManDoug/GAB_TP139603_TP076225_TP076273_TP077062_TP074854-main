@@ -262,8 +262,55 @@ bool getParcelStatus(const char* parcelId, char* statusOut) {
 // Task 1 should really change the parcel record, for now it only prints
 void updateParcelStatus(const char* parcelId, const char* newStatus) {
     cout << "[Task 1 needed] Parcel " << parcelId << " status should become " << newStatus << endl;
-}
+   
+    ifstream file("parcel.txt");
+    if (!file) {
+        cout << "parcel.txt not found!" << endl;
+        return;
+    }
 
+    char lines[100][300];
+    int lineCount = 0;
+    char header[300];
+    file.getline(header, 300); // Read header[cite: 23]
+
+    while (file.getline(lines[lineCount], 300)) {
+        lineCount++;
+    }
+    file.close();
+
+    ofstream outFile("parcel.txt");
+    outFile << header << endl; // Rewrite header[cite: 23]
+
+    for (int i = 0; i < lineCount; i++) {
+        char tempLine[300];
+        strcpy(tempLine, lines[i]);
+        char* id = strtok(lines[i], "|");
+        
+        if (id != nullptr && strcmp(id, parcelId) == 0) {
+            // Reconstruct line with new status at the end
+            // Columns: ParcelID|RecipientName|Address|Postcode|SenderAddress|Content|WeightKg|ParcelType|ArrivalTime|Status[cite: 23]
+            char* recipient = strtok(nullptr, "|");
+            char* address = strtok(nullptr, "|");
+            char* postcode = strtok(nullptr, "|");
+            char* sender = strtok(nullptr, "|");
+            char* content = strtok(nullptr, "|");
+            char* weight = strtok(nullptr, "|");
+            char* type = strtok(nullptr, "|");
+            char* arrival = strtok(nullptr, "|");
+
+            outFile << id << "|" << recipient << "|" << address << "|" << postcode << "|" 
+                    << sender << "|" << content << "|" << weight << "|" << type << "|" 
+                    << arrival << "|" << newStatus << endl;
+            
+            cout << "[File Updated] Parcel " << parcelId << " status changed to " << newStatus << endl;
+        } else {
+            outFile << tempLine << endl;
+        }
+    }
+    outFile.close();
+}
+//include task 4 here apparently
 
 
 // Show one request in one line
@@ -377,6 +424,7 @@ void createRequest() {
 
     activeRequests.enqueue(req);
     cout << "Request " << req.requestId << " created for parcel " << req.parcelId << ", priority " << req.priority << "." << endl;
+//recorded inside the activity management but how? 
 }
 
 void displayActiveRequests() {
@@ -469,6 +517,7 @@ void nextRequest() {
     int index = activeRequests.findHighest();
     cout << "\nNext request to handle" << endl;
     finishRequest(index);
+
 }
 
 // Process a request that staff select by request id
@@ -660,6 +709,8 @@ void saveRequests() {
     for(i=0;i<finishedCount;i++){
         writeRequest(file,finishedRequests[i]);
     }
+    //include task 4 activity 
+
 }
 
 #endif

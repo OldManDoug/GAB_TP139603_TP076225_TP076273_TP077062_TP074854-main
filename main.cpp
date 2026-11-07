@@ -55,11 +55,13 @@ void task2Menu() {
     } while (choice != 0);
 }
 
-
-// ARRAY PART 
+//main meny 
 int main(){
 int choice;
 loadRequests();   // task 2, read servicerequest.txt when program starts
+loadActivitiesFromFile();
+// task 4 , 1, 3, 5 read when prigram starts
+
     do {
         cout << "\n===== Product Smart Management System main menu =====" <<endl;
         cout << "1. Go to task 1" <<endl;
@@ -73,21 +75,8 @@ loadRequests();   // task 2, read servicerequest.txt when program starts
 
         switch (choice) {
             case 1: //improve by writing to a file
-            
-           
-
-                cout << "Enter Previous Status (e.g., Registered): ";
-              //  cin >> prevStatus;
-               /* if(prevStatus == ""){
-                    cout << "Previous syayis cannot be empty";
-                }*/
-
-                cout << "Enter New Status (e.g., Dispatched): ";
-                //cin >> newStatus;
-                cout << "Is Reversible? (1 for Yes, 0 for No): ";
-             //   cin >> reversibleInt;
-               // module.recordActivity(parcelId, desc, prevStatus, newStatus, (reversibleInt != 0));
-                break;
+            cout << "task 1";
+            break;
 //add error handling
             case 2:
                 task2Menu();
@@ -95,12 +84,14 @@ loadRequests();   // task 2, read servicerequest.txt when program starts
 
             case 3:
                // showDataset(datasetC, "Dataset C details", "dataset3facility_c.csv");
-                break; 
+               cout << "task 3"; 
+               break; 
             case 4:
-                
+                task4menu();
                 break;
 
             case 5:
+            cout << "Placeholder task 5";
                 break;
             case 0: break;
 
@@ -110,5 +101,7 @@ loadRequests();   // task 2, read servicerequest.txt when program starts
         }
     } while (choice != 0);
     saveRequests();   // task 2, write servicerequest.txt before exit
+    //before exit save each tasks 1,3,4,5
+
     return 0;
 }

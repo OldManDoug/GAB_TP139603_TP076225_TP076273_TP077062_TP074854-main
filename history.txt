@@ -1,3 +1,1 @@
-parcelId, activityDescription, timestamp, previousStatus, newStatus, isReversible, isReversed
-(string)      (string)            (int)          (bool or enum?)             (boolean)   (bool)        (bool?)
-P001,Long cannonn,1240,False,True,True,True
+1|P1001|Registered Parcel|None|Registered|1|0

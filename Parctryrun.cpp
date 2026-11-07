@@ -1,11 +1,53 @@
 #include <iostream>
 #include <string>
+#include <fstream> 
+#include <sstream>
+//files
 
 using namespace std;
+// the PLAN 
+/*
+Maintains a history from processing module - 
+review by staff(need their input from a file storing names)-- what happen to a parcel
+[check for a bad case]
+reverse a decision[use an if else])
+1. Record Parcel-Related Activities 
+Record important activities performed during parcel processing, with sufficient information to 
+identify the parcel, activity2 and relevant time or sequence. -- when array storr
+2. Display Activity2 History 
+Allow staff to display recent activities and the activity2 history for a selected parcel, including 
+the order in which activities occurred. 
+3. Retrieve and Review Previous Activities 
+Allow staff to select a parcel and review previous activities, including processing sequence, 
+previous status, most recent activity2 and relevant request or resource information. 
+4. Reverse or Undo an Appropriate Recent Activity2 
+confirm 
+Provide a mechanism for reversing an appropriate recent activity2 where permitted. Identify the 
+activity, 
+eligibility, 
+restore 
+relevant 
+parcel/request/resource status where necessary. 
+5. Handle Activity2-History Exceptions 
+information 
+and 
+update 
+related 
+Handle no activity2 history, invalid Parcel ID, an activity2 that cannot be reversed, an activity2 
+already reversed, invalid activity2 selection, or an operation that would result in an invalid parcel 
+status.
 
-/*=========================
-  PARCEL CLASS
-=========================*/
+- concepts apply: undoing, pop and push(redo and undo)
+- use array programming is easier than linky list. 
+---- USE STACK PROGRAMMING FOR THE MODULE--- from AI suggestible 
+
+---- BUT THIS MODULE MUST INTEGRATE WITH ALL 5 TASKS/MODULES... Activity2.txt should be from task 2 create request should display
+
+*/
+// https://codesignal.com/learn/courses/fundamental-data-structures-stacks-and-queues-in-cpp/lessons/understanding-and-implementing-stacks-in-cpp
+
+/*Rationale - the stack is most suitable because it has a condition that require stack */
+/*PARCEL CLASS for parcels*/
 
 class Parcel {
 private:
@@ -14,14 +56,14 @@ private:
 
 public:
 
-    Parcel() {
+    Parcel() { // set as null because non argument cosntructor
         parcelID = "";
         status = "";
     }
 
     Parcel(string id, string s) {
         parcelID = id;
-        status = s;
+        status = s; //parameterised construstor
     }
 
     string getParcelID() {
@@ -37,12 +79,21 @@ public:
     }
 
     void display() {
+        //output from the file 
+        string line;
+ifstream f("parcel.txt"); //to read from is if to write to is out
+if(!f.is_open()){
+    cerr << "Cannot read the file specified";
+}
+while(getline(f,line)){
         cout << "Parcel ID: "
              << parcelID
              << "\nStatus: "
              << status
              << "\n";
     }
+    f.close();
+}
 };
 
 /*=========================
@@ -96,38 +147,68 @@ public:
 
         return NULL;
     }
+    //save into a file
+    void saveParcelsToFile()
+{
+    ofstream file("parcel.txt");
 
-    void displayParcels() {
+    ParcelNode* current = head;
 
-        if(head == NULL) {
-            cout << "No parcels found.\n";
-            return;
-        }
+    while(current != NULL)
+    {
+        file
+            << current->parcel.getParcelID()
+            << ","
+            << current->parcel.getStatus()
+            << endl;
 
-        ParcelNode* current = head;
-
-        while(current != NULL) {
-
-            current->parcel.display();
-            cout << "------------------\n";
-
-            current = current->next;
-        }
+        current = current->next;
     }
+
+    file.close();
+}
+//https://www.geeksforgeeks.org/cpp/stack-and-queue-c-cpp-programs/
+    void loadParcelsFromFile()
+{
+    ifstream file("parcels.txt");
+
+    if(!file)
+        return;
+
+    string line;
+
+    while(getline(file,line))
+    {
+        stringstream ss(line);
+
+        string id;
+        string status;
+
+        getline(ss,id,',');
+
+        getline(ss,status);
+
+        addParcel(
+            Parcel(id,status)
+        );
+    }
+
+    file.close();
+}
 };
 
 /*=========================
-  ACTIVITY CLASS
+  ACTIVITY2 CLASS
 =========================*/
 
-class Activity {
+class Activity2 {
 public:
 
-    int activityID;
+    int activity2ID;
 
     string parcelID;
 
-    string activityType;
+    string activity2Type;
 
     string previousStatus;
 
@@ -137,26 +218,24 @@ public:
 
     bool reversed;
 
-    Activity* next;
+    Activity2* next;
 
-    Activity() {
+    Activity2() {
         next = NULL;
         reversed = false;
     }
 };
 
-/*=========================
-  CUSTOM STACK
-=========================*/
+/*=record a history but his needs integrate with*/
 
-class ActivityHistoryStack {
+class Activity2HistoryStack {
 private:
 
-    Activity* top;
+    Activity2* top;
 
 public:
 
-    ActivityHistoryStack() {
+    Activity2HistoryStack() {
         top = NULL;
     }
 
@@ -164,43 +243,43 @@ public:
         return top == NULL;
     }
 
-    void push(Activity* activity) {
+    void push(Activity2* activity2) {
 
-        activity->next = top;
-        top = activity;
+        activity2->next = top;
+        top = activity2;
     }
 
-    Activity* peek() {
+    Activity2* peek() {
         return top;
     }
 };
 
 /*=========================
-  ACTIVITY MANAGER
+  ACTIVITY2 MANAGER
 =========================*/
 
-class ActivityManager {
+class Activity2Manager {
 private:
 
-    ActivityHistoryStack history;
+    Activity2HistoryStack history;
 
     ParcelList* parcelList;
 
-    int activityCounter;
+    int activity2Counter;
 
 public:
 
-    ActivityManager(ParcelList* pList) {
+    Activity2Manager(ParcelList* pList) {
 
         parcelList = pList;
 
-        activityCounter = 1;
+        activity2Counter = 1;
     }
 
     void updateParcelStatus(
             string parcelID,
             string newStatus) {
-
+//rewrite back to the file
         Parcel* parcel =
                 parcelList->findParcel(parcelID);
 
@@ -221,41 +300,41 @@ public:
 
         parcel->setStatus(newStatus);
 
-        Activity* activity =
-            new Activity();
+        Activity2* activity2 =
+            new Activity2();
 
-        activity->activityID =
-            activityCounter++;
+        activity2->activity2ID =
+            activity2Counter++;
 
-        activity->parcelID =
+        activity2->parcelID =
             parcelID;
 
-        activity->activityType =
+        activity2->activity2Type =
             "Status Update";
 
-        activity->previousStatus =
+        activity2->previousStatus =
             oldStatus;
 
-        activity->newStatus =
+        activity2->newStatus =
             newStatus;
 
-        activity->reversible =
+        activity2->reversible =
             true;
 
-        history.push(activity);
+        history.push(activity2);
 
         cout << "Status updated successfully.\n";
     }
-
+//https://www.geeksforgeeks.org/cpp/stack-implementation-in-cpp/
     void displayRecentActivities() {
-
+//from a file as well, maybe history.txt
         if(history.isEmpty()) {
 
-            cout << "No activity history.\n";
+            cout << "No activity2 history.\n";
             return;
         }
 
-        Activity* current =
+        Activity2* current =
             history.peek();
 
         cout << "\n=== Recent Activities ===\n";
@@ -264,11 +343,11 @@ public:
 
             cout
                 << "Activity ID: "
-                << current->activityID
+                << current->activity2ID
                 << "\nParcel: "
                 << current->parcelID
                 << "\nType: "
-                << current->activityType
+                << current->activity2Type
                 << "\nStatus: "
                 << current->previousStatus
                 << " -> "
@@ -284,16 +363,16 @@ public:
 
     void displayParcelHistory(
             string parcelID) {
-
+//use same file to check but make one first
         if(history.isEmpty()) {
 
-            cout << "No activity history.\n";
+            cout << "No activity2 history.\n";
             return;
         }
 
         bool found = false;
 
-        Activity* current =
+        Activity2* current =
             history.peek();
 
         cout << "\n=== Parcel History ===\n";
@@ -307,9 +386,9 @@ public:
 
                 cout
                     << "Activity ID: "
-                    << current->activityID
+                    << current->activity2ID
                     << "\nType: "
-                    << current->activityType
+                    << current->activity2Type
                     << "\nPrevious Status: "
                     << current->previousStatus
                     << "\nNew Status: "
@@ -330,7 +409,7 @@ public:
 
     void reviewParcel(
             string parcelID) {
-
+//https://www.cpp.thiyagaraaj.com/data-structures-in-c/stack-programs/simple-stack-program-in-c-programming
         Parcel* parcel =
             parcelList->findParcel(parcelID);
 
@@ -352,23 +431,23 @@ public:
     }
 
     void undoActivity(
-            int activityID) {
+            int activity2ID) {
 
         if(history.isEmpty()) {
 
             cout
-            << "No activity history.\n";
+            << "No activity2 history.\n";
 
             return;
         }
 
-        Activity* current =
+        Activity2* current =
             history.peek();
 
         while(current != NULL) {
 
-            if(current->activityID
-                    == activityID) {
+            if(current->activity2ID
+                    == activity2ID) {
 
                 if(current->reversed) {
 
@@ -407,6 +486,7 @@ public:
 
                     return;
                 }
+                //error handling up top, so here will be rewrite to file 
 
                 parcel->setStatus(
                     current->previousStatus);
@@ -429,9 +509,93 @@ public:
             current = current->next;
         }
 
-        cout
-        << "Invalid activity selection.\n";
+        cout << "Invalid activity2 selection.\n";
     }
+    //in file activities
+    void saveActivitiesToFile()
+{
+    ofstream file("activity.txt");
+
+    Activity2* current =
+        history.peek();
+
+    while(current != NULL)
+    {
+        file
+          << current->activity2ID << ","
+          << current->parcelID << ","
+          << current->activity2Type << ","
+          << current->previousStatus << ","
+          << current->newStatus << ","
+          << current->reversible << ","
+          << current->reversed
+          << endl;
+
+        current =
+            current->next;
+    }
+
+    file.close();
+}
+//to display 
+void loadActivitiesFromFile()
+{
+    ifstream file("activities.txt");
+
+    if(!file)
+        return;
+
+    string line;
+
+    while(getline(file,line))
+    {
+        stringstream ss(line);
+
+        Activity2* activity2 =
+            new Activity2();
+
+        string temp;
+
+        getline(ss,temp,',');
+        activity2->activity2ID =
+            stoi(temp);
+
+        getline(ss,
+                activity2->parcelID,
+                ',');
+
+        getline(ss,
+                activity2->activity2Type,
+                ',');
+
+        getline(ss,
+                activity2->previousStatus,
+                ',');
+
+        getline(ss,
+                activity2->newStatus,
+                ',');
+
+        getline(ss,temp,',');
+        activity2->reversible =
+            stoi(temp);
+
+        getline(ss,temp);
+        activity2->reversed =
+            stoi(temp);
+
+        history.push(activity2);
+
+        if(activity2->activity2ID
+            >= activity2Counter)
+        {
+            activity2Counter =
+                activity2->activity2ID + 1;
+        }
+    }
+
+    file.close();
+}
 };
 
 /*=========================
@@ -442,16 +606,19 @@ int main() {
 
     ParcelList parcelList;
 
-    ActivityManager manager(
-        &parcelList);
+parcelList.loadParcelsFromFile();
 
+Activity2Manager manager(
+    &parcelList);
+
+manager.loadActivitiesFromFile();
     int choice;
 
     do {
 
         cout << "\n";
         cout << "========================\n";
-        cout << " PARCEL ACTIVITY SYSTEM\n";
+        cout << " PARCEL ACTIVITY2 HANDLING\n";
         cout << "========================\n";
         cout << "1. Add Parcel\n";
         cout << "2. Update Parcel Status\n";
@@ -459,8 +626,8 @@ int main() {
         cout << "4. Display Activities\n";
         cout << "5. Display Parcel History\n";
         cout << "6. Review Parcel\n";
-        cout << "7. Undo Activity\n";
-        cout << "0. Exit\n";
+        cout << "7. Undo Activity2\n";
+        cout << "0. Return to Main\n";
         cout << "Choice: ";
 
         cin >> choice;
@@ -468,27 +635,25 @@ int main() {
         switch(choice) {
 
         case 1: {
-
+//file handling above just call function? 
             string id;
             string status;
 
             cout << "Parcel ID: ";
             cin >> id;
-
+//ask for input 
             cout << "Initial Status: ";
             cin >> status;
+//when input done it go to file in addParcel
+            parcelList.addParcel( Parcel(id, status));
 
-            parcelList.addParcel(
-                Parcel(id, status));
-
-            cout
-            << "Parcel added.\n";
+            cout << "Parcel added.\n";
 
             break;
         }
 
         case 2: {
-
+//same concept to update if possible as 1.
             string id;
             string status;
 
@@ -497,18 +662,18 @@ int main() {
 
             cout << "New Status: ";
             cin >> status;
-
-            manager.updateParcelStatus(
-                id,
-                status);
-
+//can write to file here direct instead of put in a menu
+            manager.updateParcelStatus(id,status);
+            //drop file
+parcelList.saveParcelsToFile();
+manager.saveActivitiesToFile();
             break;
         }
 
         case 3: {
 
-            parcelList.displayParcels();
-
+         //   parcelList.displayParcels();
+parcelList.loadParcelsFromFile(); 
             break;
         }
 
@@ -532,7 +697,7 @@ int main() {
         }
 
         case 6: {
-
+//to review base around id 
             string id;
 
             cout << "Parcel ID: ";
@@ -549,15 +714,21 @@ int main() {
 
             cout << "Activity ID: ";
             cin >> id;
-
+//find the activity2 it wants to stop or undo only 
             manager.undoActivity(id);
-
+//drop file
+            parcelList.saveParcelsToFile();
+manager.saveActivitiesToFile();
             break;
         }
 
         case 0:
+parcelList.saveParcelsToFile();
 
-            cout << "System Closed.\n";
+manager.saveActivitiesToFile();
+//ensure its saved even 0n closing or force restart
+            cout << "Thanks for using.\n";
+            //call the main menu function returns
             break;
 
         default:
@@ -569,3 +740,4 @@ int main() {
 
     return 0;
 }
+// talk with supervisor can i take a company project from your here back to uni for FYP then do it and then give back to the company? 
