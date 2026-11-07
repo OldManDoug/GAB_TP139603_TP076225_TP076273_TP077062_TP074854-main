@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <iomanip>
+#include <cstring>
 using namespace std;
 // the PLAN 
 /*

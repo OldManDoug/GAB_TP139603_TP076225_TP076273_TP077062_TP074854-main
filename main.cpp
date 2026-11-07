@@ -3,6 +3,7 @@
 #include<fstream>
 #include "Activityrecordmanager.hpp"
 #include "History.hpp"
+#include "Task1.hpp"
 #include "Task2.hpp"
 
 using namespace std;
@@ -74,9 +75,15 @@ loadActivitiesFromFile();
         choice = readChoice();
 
         switch (choice) {
-            case 1: //improve by writing to a file
-            cout << "task 1";
-            break;
+            case 1: {
+                Task1ParcelManager parcelManager;
+                if (!parcelManager.load()) {
+                    cout << "Could not load parcel.txt. Check its header and pipe-delimited parcel records." << endl;
+                } else {
+                    parcelManager.menu();
+                }
+                break;
+            }
 //add error handling
             case 2:
                 task2Menu();
