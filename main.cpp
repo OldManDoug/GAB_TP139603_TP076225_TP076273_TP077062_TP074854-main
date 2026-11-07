@@ -4,7 +4,9 @@
 #include "Activityrecordmanager.hpp"
 #include "History.hpp"
 #include "Task1.hpp"
+#include "ResourceManager.hpp"
 #include "Task2.hpp"
+#include "ResourceAllocation.hpp"
 
 using namespace std;
 //MENU HELPERS6
@@ -91,7 +93,7 @@ loadActivitiesFromFile();
 
             case 3:
                // showDataset(datasetC, "Dataset C details", "dataset3facility_c.csv");
-               cout << "task 3"; 
+               task3Menu();
                break; 
             case 4:
                 task4menu();

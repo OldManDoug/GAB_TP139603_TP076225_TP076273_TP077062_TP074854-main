@@ -15,20 +15,20 @@
 
 using namespace std;
 
-#define maxRequest 100
+#define maxRequest 500
 
 // service types, stored as numbers
-#define collect   1
-#define delivery 2
-#define special  3
-#define returnSender 4
+const int collect = 1;
+const int delivery = 2;
+const int special = 3;
+const int returnSender = 4;
 
 // request status, stored as numbers
-#define pending 1
-#define assigned  2
-#define completed 3
-#define cancelled 4
-#define returned  5
+const int pending = 1;
+const int assigned = 2;
+const int completed = 3;
+const int cancelled = 4;
+const int returned = 5;
 
 // priority rule
 // special = 4, delivery = 3, return = 2, collection = 1, plus 4 if urgent
@@ -121,6 +121,8 @@ serviceRequest finishedRequests[maxRequest];  // completed, cancelled or returne
 int finishedCount = 0;
 int nextRequestNo = 1;                        // used to make REQ001, REQ002 ...
 
+void saveRequests();
+
 
 
 // small input helpers
@@ -199,6 +201,22 @@ int calPriority(int serviceType, int isUrgent) {
         score = score + 4;
     }
     return score;
+}
+
+// Check whether this service can be used at the parcel's current status
+// follows the status rules in Task 1, On Hold and Handled must go back through Task 1 first
+bool serviceAllowed(const char* parcelStatus,int type){
+    if(strcmp(parcelStatus,"Registered")==0)
+        return true;
+    if(strcmp(parcelStatus,"Prepared for Collection")==0)
+        return type == collect;
+    if(strcmp(parcelStatus,"Assigned for Delivery")==0)
+        return type == delivery;
+    if(strcmp(parcelStatus,"Special Handling")==0)
+        return type == special;
+    if(strcmp(parcelStatus,"Return to Sender")==0)
+        return type == returnSender;
+    return false;
 }
 
 // Fill text with the current date and time like 2026-11-03 09:00
@@ -300,6 +318,10 @@ void createRequest() {
         cout << "Invalid service type." << endl;
         return;
     }
+    if(!serviceAllowed(parcelStatus,type)){
+        cout << "Parcel is " << parcelStatus << ", " << service(type) << " request is not allowed." << endl;
+        return;
+    }
 
     cout << "Is it urgent? (1 for Yes, 0 for No): ";
     urgent = readNumber();
@@ -323,6 +345,7 @@ void createRequest() {
 
     activeRequests.enqueue(req);
     cout << "Request " << req.requestId << " created for parcel " << req.parcelId << ", priority " << req.priority << "." << endl;
+    saveRequests();
 //recorded inside the activity management but how? 
 }
 
@@ -349,6 +372,13 @@ void showNextRequest() {
     showDetails(activeRequests.arr[index]);
 }
 
+// Give the counter or delivery person back to Task 3, "-" means it never had one
+void freeResource(serviceRequest r){
+    if(strcmp(r.resourceId,"-") != 0){
+        releaseResource(r.resourceId);
+    }
+}
+
 // Ask staff for the result then finish the request at this index
 void finishRequest(int index) {
     if(finishedCount>=maxRequest){
@@ -369,8 +399,33 @@ void finishRequest(int index) {
         return;
     }
 
-    serviceRequest req = activeRequests.removeAt(index);
+    // completed or returned needs a resource first, cancel does not
+    if(result != 2 && activeRequests.arr[index].status != assigned){
+        cout << "Request has no resource yet, assign one in Task 3 first." << endl;
+        return;
+    }
+
+    serviceRequest req = activeRequests.arr[index];
     char newParcelStatus[30];
+    char parcelStatus[30];
+    char name[50];
+    char realName[50];
+
+    // only the real recipient can collect the parcel
+    // read the name from Task 1 because staff can update it after the request is made
+    if(result == 1 && req.serviceType == collect){
+        if(!getParcelRecipient(req.parcelId,realName)){
+            cout << "Parcel record not found, request not finished." << endl;
+            return;
+        }
+        cout << "Enter recipient name: ";
+        readText(name,50);
+        if(strcmp(name,realName) != 0){
+            cout << "Recipient name does not match, request not finished." << endl;
+            return;
+        }
+        copyText(req.recipientName,realName,50);
+    }
 
     if(result == 1){
         req.status = completed;
@@ -399,12 +454,28 @@ void finishRequest(int index) {
         strcpy(newParcelStatus,"Returned");
     }
 
+    updateParcelStatus(req.parcelId,newParcelStatus);
+
+    // Task 1 can refuse the change, so read it back before finishing the request
+    // a cancel still goes through because the service is not happening anyway
+    if(result != 2){
+        if(!getParcelStatus(req.parcelId,parcelStatus)){
+            cout << "Parcel record not found, request not finished." << endl;
+            return;
+        }
+        if(strcmp(parcelStatus,newParcelStatus) != 0){
+            cout << "Parcel is " << parcelStatus << ", cannot change to " << newParcelStatus << ". Request not finished." << endl;
+            return;
+        }
+    }
+
+    activeRequests.removeAt(index);
     finishedRequests[finishedCount] = req;
     finishedCount++;
 
-    updateParcelStatus(req.parcelId,newParcelStatus);
+    freeResource(req);
     cout << "Request " << req.requestId << " is now " << status(req.status) << "." << endl;
-    // if Task 3 gave a resource to this request, Task 3 should free it here
+    saveRequests();
 }
 
 // Process the request with the highest priority
@@ -475,7 +546,9 @@ void cancelRequest() {
     finishedCount++;
 
     updateParcelStatus(req.parcelId,"Registered");
+    freeResource(req);
     cout << "Request " << req.requestId << " cancelled." << endl;
+    saveRequests();
 }
 
 void searchRequest() {
@@ -511,6 +584,17 @@ void displayFinishRequests() {
     }
 }
 
+// For Task 1 and Task 5, check this before removing a parcel
+bool parcelActiveRequest(const char* id) {
+    int i;
+    for(i=0;i<activeRequests.size;i++){
+        if(strcmp(activeRequests.arr[i].parcelId,id)==0){
+            return true;
+        }
+    }
+    return false;
+}
+
 // For Task 3, called when a counter or delivery person is given to a request
 bool assignResource(const char* requestId, const char* resourceId) {
     int index = activeRequests.findById(requestId);
@@ -524,6 +608,7 @@ bool assignResource(const char* requestId, const char* resourceId) {
     }
     copyText(activeRequests.arr[index].resourceId,resourceId,10);
     activeRequests.arr[index].status = assigned;
+    saveRequests();
     return true;
 }
 
