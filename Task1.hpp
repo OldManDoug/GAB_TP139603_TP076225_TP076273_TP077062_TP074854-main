@@ -170,13 +170,27 @@ public:
         if (!n || n->data.status.size()>=30) return false;
         std::strcpy(out,n->data.status.c_str()); return true;
     }
+   
     bool setStatus(const char* id,const char* value) {
         if (!id||!value||!validStatus(value)) return false;
         Task1ParcelNode* n=find(id);
         if (!n||!allowedTransition(n->data.status,value)) return false;
-        std::string old=n->data.status; n->data.status=value;
-        if (save()) return true;
-        n->data.status=old; return false;
+        
+        std::string old=n->data.status; 
+        n->data.status=value;
+
+        if (save()) {
+            // When status is saved, it is sent to activity record to history-task 4
+            std::ofstream actLog("activity.txt", std::ios::app);
+            if (actLog) {
+                actLog << id << "|Status Update|" << old << "|" << value << "|true\n";
+            } //into the file the status needed for task 4 to edit
+            return true;
+        }
+        
+        n->data.status=old; 
+        return false;
+
     }
     bool registerParcel(const Task1Parcel& input,std::string& assignedId) {
         if (!validRecipient(input.recipient)||!validText(input.address)||!validText(input.postcode)||
@@ -245,7 +259,7 @@ public:
     }
     void menu() {
         int choice=0;
-        do {
+        do { //this part need to clean leh 
             std::cout<<"\n===== TASK 1: PARCEL INTAKE, SORTING & PROCESSING =====\n"
                 <<"1 Register parcel  2 Display all  3 Search/view by ID\n"
                 <<"4 Classify/route incoming parcel  5 Process next action queue\n"
