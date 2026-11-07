@@ -569,7 +569,7 @@ void task4menu()
     if (parcelFile) {
         parcelFile.getline(line, 300); 
         while (parcelFile.getline(line, 300) && totalParcels < maxParcels) {
-            char* id = strtok(line, "|"); // strtok means
+            char* id = strtok(line, "|"); // strtok means terminating c strings
             // Skip name, address, etc., read until status
             char* token = NULL;
             char lastToken[50] = "";
