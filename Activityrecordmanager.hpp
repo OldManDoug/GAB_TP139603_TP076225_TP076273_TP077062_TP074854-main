@@ -270,6 +270,11 @@ if(f){
 
     void displayActivity(Activity a)
     {
+        ifstream f("activity.txt");
+        if(!f){
+        cout << "Error with file";
+        }
+        
         cout << "\nActivity ID : "
              << a.activityID;
 
