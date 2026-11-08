@@ -14,6 +14,9 @@
 #include <windows.h>
 #endif
 
+// Task 2 integration: prevent deleting parcels with an active request.
+bool parcelActiveRequest(const char* id);
+
 // Task 1 uses a custom singly linked list for the parcel master records.
 // The text file is shared with Task 2 and uses the agreed ten-column format.
 struct Task1Parcel {
@@ -240,7 +243,7 @@ public:
         if (!id||!*id) return false;
         Task1ParcelNode *prev=NULL,*n=head;
         while(n&&n->data.id!=id) { prev=n; n=n->next; }
-        if (!n || (n->data.status!="Registered"&&n->data.status!="Cancelled")) return false;
+        if (!n || parcelActiveRequest(id) || (n->data.status!="Registered"&&n->data.status!="Cancelled")) return false;
         Task1ParcelNode* after=n->next;
         if(prev) prev->next=after; else head=after;
         --count;
@@ -337,7 +340,7 @@ public:
                 std::cout<<(setStatus(id.c_str(),"Missing")?"Parcel marked Missing.\n":"Update rejected: parcel not found or already completed.\n");
             } else if(choice==9) {
                 std::string id; std::cout<<"Parcel ID to remove: "; std::getline(std::cin,id);
-                std::cout<<(removeParcel(id.c_str())?"Parcel removed.\n":"Removal rejected: only Registered or Cancelled parcels may be removed.\n");
+                std::cout<<(removeParcel(id.c_str())?"Parcel removed.\n":"Removal rejected: parcel has an active request or is not Registered/Cancelled.\n");
             } else if(choice==10) {
                 std::cout<<"Registered arrivals:\n"; displayStatus("Registered");
                 std::cout<<"Recipient collection:\n"; displayStatus("Prepared for Collection");
