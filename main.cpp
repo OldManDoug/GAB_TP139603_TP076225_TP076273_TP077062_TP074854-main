@@ -1,12 +1,13 @@
 #include <iostream>
 #include <string>
 #include<fstream>
-#include "Activityrecordmanager.hpp"
 #include "History.hpp"
 #include "Task1.hpp"
 #include "ResourceManager.hpp"
 #include "Task2.hpp"
 #include "ResourceAllocation.hpp"
+#include "Activityrecordmanager.hpp"
+#include "Task5.hpp"
 
 using namespace std;
 //MENU HELPERS6
@@ -100,7 +101,10 @@ loadActivitiesFromFile();
                 break;
 
             case 5:
-            cout << "Placeholder task 5";
+                {
+                    Task5ParcelManager categories;
+                    categories.menu();
+                }
                 break;
             case 0: break;
 
