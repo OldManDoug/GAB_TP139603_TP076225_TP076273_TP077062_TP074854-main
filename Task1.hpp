@@ -144,9 +144,12 @@ public:
         std::ifstream in("parcel.txt");
         if (!in) return false;
         std::string first,line;
-        if (!std::getline(in,first) || first!=header()) return false;
+        if (!std::getline(in,first)) return false;
+        if (!first.empty() && first.back()=='\r') first.pop_back();
+        if (first!=header()) return false;
         clear();
         while (std::getline(in,line)) {
+            if (!line.empty() && line.back()=='\r') line.pop_back();
             if (line.empty()) continue;
             Task1Parcel p;
             if (!parse(line,p) || find(p.id)) { clear(); return false; }
@@ -156,6 +159,21 @@ public:
             ++count;
         }
         return in.eof();
+    }
+    // Read-only snapshot interface for Task 5's tree index. File order stays intact.
+    template <typename Visitor>
+    void forEachParcel(Visitor visit) const {
+        for (Task1ParcelNode* n=head; n; n=n->next) visit(n->data);
+    }
+    bool updateCategory(const char* id, const std::string& category) {
+        if (!id || !validText(category)) return false;
+        Task1ParcelNode* n=find(id);
+        if (!n || isTerminal(n->data.status)) return false;
+        std::string old=n->data.type;
+        n->data.type=category;
+        if (save()) return true;
+        n->data.type=old;
+        return false;
     }
     bool exists(const char* id) const { return id && *id && find(id)!=NULL; }
     bool recipient(const char* id,char* out) const {
