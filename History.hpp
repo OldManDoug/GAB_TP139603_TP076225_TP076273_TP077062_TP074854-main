@@ -1,117 +1,203 @@
+#ifndef HISTORY_HPP
+#define HISTORY_HPP
+
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <stdlib.h>
+#include <cstring>
+
 using namespace std;
-/* Simple Stack Program Example Using Functions in C++*/
-/* Data Structure Programs,Stack Programs,C++ Examples */
-#define MAX_SIZE 5
 
+/*=================================
+    ACTIVITY STRUCT
+==================================*/
+struct Activity {
+    int activityID;
+    string parcelID;
+    string action;
+    string previousStatus;
+    string newStatus;
+    bool reversible;
+    bool reversed;
 
-int item, choice, i;
-int arr_stack[MAX_SIZE];
-int top = 0;
-int exit_p = 1;
-
-void push() {
-    if (top == MAX_SIZE)
-        cout << "\n## Stack is Full!";
-    else {
-        cout << "\nEnter The Value to be pushed : ";
-        cin>>item;
-        cout << "\n## Position : " << top << ", Pushed Value  :" << item;
-        arr_stack[top++] = item;
-    }
-}
-
-void pop() {
-    if (top == 0)
-        cout << "\n## Stack is Empty!";
-    else {
-        --top;
-        cout << "\n## Position : " << top << ", Popped Value  :" << arr_stack[top];
-    }
-}
-
-void display() {
-    cout << "\n## Stack Size : " << top;
-    for (i = (top - 1); i >= 0; i--)
-        cout << "\n## Position : " << i << ", Value  :" << arr_stack[i];
-}
-
-
-//1042am--1110am(PSeni)--1142-1200(TBhgia-30min)--work()
-//staff module to record staff activity. 
-void read(){
-
-cout << "\nSimple Stack Example - Array and Functions - C++";
-    do {
-        cout << "\n\nStack Main Menu";
-
-        cout << "\n1.Push \n2.Pop \n3.Display \nOthers to exit";
-        cout << "\nEnter Your Choice : ";
-        cin>>choice;
-        switch (choice) {
-            case 1:
-                push();
-                break;
-            case 2:
-                pop();
-                break;
-            case 3:
-                display();
-                break;
-            default:
-                exit_p = 0;
-                break;
-        }
-    } while (exit_p);
-
-}
-
-template <typename T, size_t Capacity = 100>
-class SafeStack {
-private:
-    T data[Capacity];
-    int topIndex;
-
-public:
-    SafeStack() : topIndex(-1) {}
-
-    bool empty() const { return topIndex < 0; }
-    bool full() const { return topIndex >= static_cast<int>(Capacity) - 1; }
-
-    // Returns true if successful, false if overflow occurs
-    bool push(const T& value) {
-        if (full()) {
-            return false; // Error handled silently or logged
-        }
-        data[++topIndex] = value;
-        return true;
-    }
-
-    // Returns true if successful, false if underflow occurs
-    bool pop(T& removedValue) {
-        if (empty()) {
-            return false; 
-        }
-        removedValue = data[topIndex--];
-        return true;
+    Activity() {
+        activityID = 0;
+        parcelID = "";
+        action = "";
+        previousStatus = "";
+        newStatus = "";
+        reversible = false;
+        reversed = false;
     }
 };
 
-void part() { // this is error handling to use in parcel
-    SafeStack<int, 2> stack;
-
-    if (!stack.push(50)) {
-        std::cout << "Push failed: Stack is full.\n";
+/*=================================
+    FILE LOGGING (Record Activity)
+==================================*/
+inline void recordActivity(string parcelID, string action, string previousStatus, string newStatus, bool reversible, bool reversed = false) {
+    int nextID = 1;
+    ifstream inFile("activity.txt");
+    string line;
+    if (inFile) {
+        while (getline(inFile, line)) {
+            if (!line.empty()) nextID++;
+        }
+        inFile.close();
     }
 
-    int val;
-    if (!stack.pop(val)) {
-        std::cout << "Pop failed: Stack is empty.\n";
-    } else {
-        std::cout << "Popped: " << val << "\n";
+    ofstream f("activity.txt", ios::app);
+    if (f) {
+        f << nextID << "|"
+          << parcelID << "|"
+          << action << "|"
+          << previousStatus << "|"
+          << newStatus << "|"
+          << (reversible ? "1" : "0") << "|"
+          << (reversed ? "1" : "0") << endl;
+        f.close();
     }
-
 }
+
+/*=================================
+    DISPLAY ALL RECORDED ACTIVITIES
+==================================*/
+inline void displayAllActivitiesFromFile() {
+    ifstream file("activity.txt");
+    if (!file) {
+        cout << "\nNo activity history found (activity.txt missing).\n";
+        return;
+    }
+
+    string line;
+    cout << "\n=========================================";
+    cout << "\n       ALL RECORDED ACTIVITIES           ";
+    cout << "\n=========================================\n";
+    bool hasContent = false;
+    while (getline(file, line)) {
+        if (line.empty()) continue;
+        hasContent = true;
+        
+        char buffer[300];
+        strcpy(buffer, line.c_str());
+        char* fields[10];
+        int count = 0;
+        char* token = strtok(buffer, "|");
+        while (token != NULL && count < 10) {
+            fields[count++] = token;
+            token = strtok(NULL, "|");
+        }
+
+        if (count >= 6) {
+            cout << "Activity ID : " << fields[0] << endl;
+            cout << "Parcel ID   : " << fields[1] << endl;
+            cout << "Action      : " << fields[2] << endl;
+            cout << "Previous    : " << fields[3] << endl;
+            cout << "New Status  : " << fields[4] << endl;
+            cout << "Reversible  : " << (string(fields[5]) == "1" ? "Yes" : "No") << endl;
+            cout << "Reversed    : " << (count > 6 && string(fields[6]) == "1" ? "Yes" : "No") << endl;
+            cout << "-----------------------------------------\n";
+        }
+    }
+    file.close();
+    if (!hasContent) cout << "Activity log is empty.\n";
+}
+
+/*=================================
+    DISPLAY SINGLE PARCEL HISTORY
+==================================*/
+inline void displayParcelHistoryFromFile(string targetParcelID) {
+    ifstream file("activity.txt");
+    if (!file) {
+        cout << "\nactivity.txt not found.\n";
+        return;
+    }
+
+    string line;
+    bool found = false;
+    cout << "\n========== HISTORY FOR PARCEL " << targetParcelID << " ==========\n";
+
+    while (getline(file, line)) {
+        if (line.empty()) continue;
+
+        char buffer[300];
+        strcpy(buffer, line.c_str());
+        char* fields[10];
+        int count = 0;
+        char* token = strtok(buffer, "|");
+        while (token != NULL && count < 10) {
+            fields[count++] = token;
+            token = strtok(NULL, "|");
+        }
+
+        if (count >= 6 && string(fields[1]) == targetParcelID) {
+            found = true;
+            cout << "Activity ID : " << fields[0] << endl;
+            cout << "Parcel ID   : " << fields[1] << endl;
+            cout << "Action      : " << fields[2] << endl;
+            cout << "Previous    : " << fields[3] << endl;
+            cout << "New Status  : " << fields[4] << endl;
+            cout << "Reversible  : " << (string(fields[5]) == "1" ? "Yes" : "No") << endl;
+            if (count > 6) {
+                cout << "Reversed    : " << (string(fields[6]) == "1" ? "Yes" : "No") << endl;
+            }
+            cout << "-----------------------------------------\n";
+        }
+    }
+    file.close();
+
+    if (!found) {
+        cout << "No activity history found for Parcel ID: " << targetParcelID << "\n";
+    }
+}
+
+/*=================================
+    REVIEW / RETRIEVE PREVIOUS ACTIVITIES
+==================================*/
+inline void reviewParcelHistory(string targetParcelID) {
+    ifstream file("activity.txt");
+    if (!file) {
+        cout << "\nactivity.txt not found.\n";
+        return;
+    }
+
+    string line;
+    bool found = false;
+    string latestStatus = "";
+    string latestAction = "";
+
+    cout << "\n========== REVIEW PARCEL: " << targetParcelID << " ==========\n";
+
+    while (getline(file, line)) {
+        if (line.empty()) continue;
+
+        char buffer[300];
+        strcpy(buffer, line.c_str());
+        char* fields[10];
+        int count = 0;
+        char* token = strtok(buffer, "|");
+        while (token != NULL && count < 10) {
+            fields[count++] = token;
+            token = strtok(NULL, "|");
+        }
+
+        if (count >= 6 && string(fields[1]) == targetParcelID) {
+            found = true;
+            cout << "Activity " << fields[0] << " : " << fields[2] << "\n";
+            cout << "Status   : " << fields[4] << "\n\n";
+            latestStatus = fields[4];
+            latestAction = fields[2];
+        }
+    }
+    file.close();
+
+    if (!found) {
+        cout << "Invalid Parcel ID or No History Recorded.\n";
+        return;
+    }
+
+    cout << "Most Recent Activity : " << latestAction << "\n";
+    cout << "Current Status       : " << latestStatus << "\n";
+    cout << "===============================================\n";
+}
+
+#endif

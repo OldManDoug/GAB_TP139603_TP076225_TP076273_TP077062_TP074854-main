@@ -5,6 +5,7 @@
 
 #include "ResourceManager.hpp"
 
+
 const int T3_SVC_COLLECTION = 1;
 const int T3_SVC_DELIVERY = 2;
 const int T3_SVC_SPECIAL = 3;
@@ -47,6 +48,8 @@ bool assignFromFront(string requestId, string parcelId, int type) {
     resourceManager.occupy(r, requestId, parcelId);
     cout << "  " << requestId << " -> " << resourceId << " (" << r->name << ")" << endl;
     return true;
+    // to try integrate task 4 FOR resources have been given and made
+    
 }
 
 void purgeWaiting(int type) {

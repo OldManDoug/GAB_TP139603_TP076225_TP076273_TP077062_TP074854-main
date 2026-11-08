@@ -6,6 +6,7 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include "History.hpp" //to integrate with task 4 to record activities
 using namespace std;
 
 const int RES_TYPE_COUNTER = 1;
@@ -190,6 +191,8 @@ public:
         r.name = name;
         resources[resourceCount++] = r;
         freeQueue(type)->addQueue(r.resourceId);
+        // TASK 4 INTEGRATION: Log resource registration
+        recordActivity("SYSTEM", "Resource Registered (" + r.resourceId + " - " + r.name + ")", "None", "Available", false);
         return r.resourceId;
     }
 
@@ -215,6 +218,10 @@ public:
         r->status = RES_OCCUPIED;
         r->requestId = requestId;
         r->parcelId = parcelId;
+        // INTEGRATION HOOK: Log resource assignment into activity.txt
+        // This captures the required "relevant request or resource information trial and error"
+        string actionDesc = "Resource Assigned (" + r->resourceId + " - " + r->name + ", Req: " + requestId + ")";
+        recordActivity(parcelId, actionDesc, "Pending", "Assigned", true);
     }
 
     void release(string resourceId) {
@@ -226,6 +233,11 @@ public:
         if (r->status != RES_OCCUPIED) {
             cout << "[Task 3] Invalid release: " << resourceId << " is not occupied." << endl;
             return;
+        }
+// try to integrate task 4
+if (!r->parcelId.empty()) {
+            string actionDesc = "Resource Released (" + r->resourceId + " - " + r->name + ", Req: " + r->requestId + ")";
+            recordActivity(r->parcelId, actionDesc, "Assigned", "Processed/Released", false);
         }
         cout << "[Task 3] " << resourceId << " finished " << r->requestId;
         r->requestId = "";
@@ -277,6 +289,8 @@ public:
             cout << r->resourceId << " will become unavailable after " << r->requestId << "." << endl;
             return;
         }
+        // TASK 4 INTEGRATION: Log resource availability exception / status change
+        recordActivity("SYSTEM", "Resource Unavailable (" + r->resourceId + ")", "Available", "Unavailable", false);
         freeQueue(r->type)->remove(r->resourceId);
         r->status = RES_UNAVAILABLE;
         cout << r->resourceId << " is now unavailable." << endl;

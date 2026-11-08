@@ -1,9 +1,10 @@
 ParcelID|RecipientName|Address|Postcode|SenderAddress|Content|WeightKg|ParcelType|ArrivalTime|Status
 P001|John Quincy Adams|14 Madman Avenue|55000|23 Black Lane|Textbooks|0.5|Normal|2026-11-02 09:15|Registered
 P002|Siti Aminah|8 Jalan Damai|57000|Shop Lazada KL|Red colored gecko|0.9|Live Animal|2026-11-02 09:40|Registered
-P003|Raj Kumar|22 Taman Bukit|58000|Pasar Fresh Mart|Fresh fish|2.0|Perishable|2026-11-02 10:05|Registered
+P003|Raj Kumar|22 Taman Bukit|58000|Pasar Fresh Mart|Fresh fish|2.0|Perishable|2026-11-02 10:05|Handled
 P004|Lee Wei Ming|5 Jalan Indah|55100|Glass Gallery|Glass vase|1.5|Fragile|2026-11-02 10:30|Registered
 P005|Nur Aisyah|31 Lorong Aman|56000|Fashion Store|Dress|0.4|Normal|2026-11-02 11:00|Registered
-P006|Ahmad Faiz|17 Jalan Mawar|57100|Tech Gadgets|Laptop charger|0.6|Normal|2026-11-03 08:50|Registered
-P007|Mei Ling Tan|9 Taman Seri|55200|Book Depot|Notebooks|1.2|Normal|2026-11-03 09:20|Registered
+P007|Mei Ling Tan|9 Taman Seri|55200|Book Depot|Notebooks|1.2|Normal|2026-11-03 09:20|Missing
 P008|Daniel Lim|44 Jalan Bunga|58100|Flower Shop|Flower bouquet|0.8|Perishable|2026-11-03 10:10|Registered
+P009|Honey|434 robertson road|57800|45 rotten machan lane|two bottles of pure jamaica honey|0.24|Fragile|13-11-2026|Registered
+P010|Ambrose|45 rotten machan lane|57800|434 robertson road|two bottles of pure jamaica honey|0.24|Fragile|2026-11-13 16:00|Registered

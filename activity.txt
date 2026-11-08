@@ -1,1 +1,13 @@
-
+3|P010|Parcel Registered (Task 5 Insert)|None|Registered|1|0
+4|P003|Status Update|Registered|Handled|1|0
+5|P003|Service Request Created|Registered|Pending Request|1|0
+4|SYSTEM|Resource Registered (C01 - Main Counter 1)|None|Available|0|0
+5|SYSTEM|Resource Registered (C02 - Main Counter 2)|None|Available|0|0
+6|SYSTEM|Resource Registered (C03 - Express Counter)|None|Available|0|0
+7|SYSTEM|Resource Registered (D01 - Ahmad Faizal)|None|Available|0|0
+8|SYSTEM|Resource Registered (D02 - Tan Wei Ling)|None|Available|0|0
+9|SYSTEM|Resource Registered (D03 - Ravi Kumar)|None|Available|0|0
+P007|Status Update|Registered|Missing|true
+11|P004|Service Request Created|Registered|Pending Request|1|0
+12|P004|Resource Assigned (D01 - Ahmad Faizal, Req: REQ004)|Pending|Assigned|1|0
+13|P009|Category Update|Previous Category|Fragile|1|0

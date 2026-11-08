@@ -63,7 +63,7 @@ void task2Menu() {
 int main(){
 int choice;
 loadRequests();   // task 2, read servicerequest.txt when program starts
-loadActivitiesFromFile();
+
 // task 4 , 1, 3, 5 read when prigram starts
 
     do {
@@ -93,8 +93,7 @@ loadActivitiesFromFile();
                 break;
 
             case 3:
-               // showDataset(datasetC, "Dataset C details", "dataset3facility_c.csv");
-               task3Menu();
+                  task3Menu();
                break; 
             case 4:
                 task4menu();

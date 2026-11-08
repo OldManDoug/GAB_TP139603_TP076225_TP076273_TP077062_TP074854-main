@@ -5,13 +5,20 @@
 #include <cstring>
 #include "Task1.hpp" //to allow it to use
 #include "Task2.hpp"
+#include "Task5.hpp"
+#include "History.hpp"
 using namespace std;
 // the PLAN 
-/*
+/*operation of stacks, but solve issues related..
+ display history can be done with stack to display(peek operation)
+to undo a action/history use a POP 
+Record parcel acvitivty use the PUSH
+Retrieve and review ( ig push and pop or display from stack/peek )
+Empty or nullcases use isEmpty() function for stack -- also error handling in stack research on. 
 Maintains a history from processing module - 
 review by staff(need their input from a file storing names)-- what happen to a parcel
 [check for a bad case] reverse a decision[use an if else])
-1. Record Parcel-Related Activities 
+1. Record Parcel-Related Activities (ALL FILES, ENTIRE SYSTEM)
 Record important activities performed during parcel processing, with sufficient information to 
 identify the parcel, activity and relevant time or sequence. -- when array storr
 2. Display Activity History 
@@ -26,602 +33,225 @@ already reversed, invalid activity selection, or an operation that would result 
 status.
 - concepts apply: undoing, pop and push(redo and undo)
 ---- USE STACK PROGRAMMING FOR THE MODULE---
-Task 4 records all actions
 
 */
 // https://codesignal.com/learn/courses/fundamental-data-structures-stacks-and-queues-in-cpp/lessons/understanding-and-implementing-stacks-in-cpp
 
-// Define Stack class 
 /*=================================
-    PARCEL CLASS
+    CUSTOM STACK NODE FOR UNDO
 ==================================*/
-class Parcel
-{
-private:
-    string parcelID;
-    string currentStatus;
-
-public:
-    Parcel()
-    {
-        parcelID = "";
-        currentStatus = "";
-    }
-
-    Parcel(string id, string status)
-    {
-        parcelID = id;
-        currentStatus = status;
-    }
-
-    string getParcelID()
-    {
-        return parcelID;
-    }
-
-    string getStatus()
-    {
-        return currentStatus;
-    }
-
-    void setStatus(string status)
-    {
-        currentStatus = status;
-    }
-};
-
-/*=================================
-    ACTIVITY CLASS
-==================================*/
-class Activity
-{
-public:
+struct UndoNode {
     int activityID;
     string parcelID;
     string action;
     string previousStatus;
     string newStatus;
-    bool reversible;
-    bool reversed;
-
-    Activity()
-    {
-        activityID = 0;
-        parcelID = "";
-        action = "";
-        previousStatus = "";
-        newStatus = "";
-        reversible = false;
-        reversed = false;
-    }
-};
-
-/*=================================
-    LINKED LIST NODE
-==================================*/
-struct ActivityNode
-{
-    Activity activity;
-    ActivityNode* next;
-
-    ActivityNode()
-    {
-        next = NULL;
-    }
-};
-
-/*=================================
-    CUSTOM STACK NODE
-==================================*/
-struct UndoNode
-{
-    int activityID;
     UndoNode* next;
 
-    UndoNode(int id)
-    {
+    UndoNode(int id, string pId, string act, string prev, string nSt) {
         activityID = id;
+        parcelID = pId;
+        action = act;
+        previousStatus = prev;
+        newStatus = nSt;
         next = NULL;
     }
 };
 
 /*=================================
-      UNDO STACK
+      LIFO UNDO STACK
 ==================================*/
-class UndoStack
-{
+class UndoStack {
 private:
     UndoNode* topNode;
 
 public:
+    UndoStack() { topNode = NULL; }
 
-    UndoStack()
-    {
-        topNode = NULL;
-    }
+    bool isEmpty() { return topNode == NULL; }
 
-    bool isEmpty()
-    {
-        return topNode == NULL;
-    }
-
-    void push(int activityID)
-    {
-        UndoNode* newNode = new UndoNode(activityID);
-
+    void push(int id, string pId, string act, string prev, string nSt) {
+        UndoNode* newNode = new UndoNode(id, pId, act, prev, nSt);
         newNode->next = topNode;
         topNode = newNode;
     }
 
-    int pop()
-    {
-        if(isEmpty())
-            return -1;
-
+    UndoNode pop() {
+        if (isEmpty()) return UndoNode(-1, "", "", "", "");
         UndoNode* temp = topNode;
-
-        int value = temp->activityID;
-
+        UndoNode val = *temp;
         topNode = topNode->next;
-
         delete temp;
-
-        return value;
+        return val;
     }
 
-    int peek()
-    {
-        if(isEmpty())
-            return -1;
-
-        return topNode->activityID;
+    UndoNode peek() {
+        if (isEmpty()) return UndoNode(-1, "", "", "", "");
+        return *topNode;
     }
 };
 
 /*=================================
-  ACTIVITY MANAGER
+  ACTIVITY MANAGER (Undo & Exceptions)
 ==================================*/
-class ActivityManager
-{
-    //global variable? 
+class ActivityManager {
 private:
-
-    ActivityNode* head;
-
     UndoStack undoStack;
 
-    int nextActivityID;
-
 public:
+    ActivityManager() {}
 
-    ActivityManager()
-    {
-        head = NULL;
-        nextActivityID = 1;
-    }
+    // Hydrate stack from activity.txt on startup
+    void loadUndoStackFromFile() {
+        ifstream file("activity.txt");
+        if (!file) return;
 
-    /*=================================
-        RECORD ACTIVITY
-    =================================*/
+        string line;
+        while (getline(file, line)) {
+            if (line.empty()) continue;
 
-    void recordActivity(
-        string parcelID,
-        string action,
-        string previousStatus,
-        string newStatus,
-        bool reversible)
-    {
-        Activity a;
-
-        a.activityID = nextActivityID++;
-        a.parcelID = parcelID;
-        a.action = action;
-        a.previousStatus = previousStatus;
-        a.newStatus = newStatus;
-        a.reversible = reversible;
-        a.reversed = false;
-
-        ActivityNode* newNode = new ActivityNode();
-
-        newNode->activity = a;
-
-        if(head == NULL)
-        {
-            head = newNode;
-        }
-        else
-        {
-            ActivityNode* current = head;
-
-            while(current->next != NULL)
-            {
-                current = current->next;
+            char buffer[300];
+            strcpy(buffer, line.c_str());
+            char* fields[10];
+            int count = 0;
+            char* token = strtok(buffer, "|");
+            while (token != NULL && count < 10) {
+                fields[count++] = token;
+                token = strtok(NULL, "|");
             }
 
-            current->next = newNode;
-        }
+            if (count >= 7) {
+                int id = atoi(fields[0]);
+                string parcelID = fields[1];
+                string action = fields[2];
+                string prev = fields[3];
+                string newSt = fields[4];
+                bool rev = (string(fields[5]) == "1");
+                bool revd = (string(fields[6]) == "1");
 
-        if(reversible)
-        {
-            undoStack.push(a.activityID);
-        }
- //file to save
-    ofstream f("activity.txt", ios::app); //as an application
-if(f){
-    f << a.activityID << "|"
-             << a.parcelID << "|"
-             << a.action << "|"
-             << a.previousStatus << "|"
-             << a.newStatus << "|"
-             << a.reversible << "|"
-             << a.reversed
-             << endl;
-
-        f.close();
-}
-
-        cout << "\nActivity Recorded Successfully.\n";
-   
-    }
-
-    /*=================================
-          DISPLAY SINGLE ACTIVITY - it is not working
-    =================================*/
-
-    void displayActivity(Activity a)
-    {
-        ifstream f("activity.txt");
-        if(!f){
-        cout << "Error with file";
-        }
-        
-        cout << "\nActivity ID : "
-             << a.activityID;
-
-        cout << "\nParcel ID   : "
-             << a.parcelID;
-
-        cout << "\nAction      : "
-             << a.action;
-
-        cout << "\nPrevious    : "
-             << a.previousStatus;
-
-        cout << "\nNew Status  : "
-             << a.newStatus;
-
-        cout << "\nReversible  : "
-             << (a.reversible ? "Yes" : "No");
-
-        cout << "\nReversed    : "
-             << (a.reversed ? "Yes" : "No");
-
-        cout << "\n----------------------------------\n";
-    }
-
-    /*=================================
-         PARCEL HISTORY separate? 
-    =================================*/
-
-    void displayParcelHistory(string parcelID)
-    {
-        bool found = false;
-
-        ActivityNode* current = head;
-
-        cout << "\nHistory for Parcel "
-             << parcelID
-             << "\n";
-
-        while(current != NULL)
-        {
-            if(current->activity.parcelID == parcelID)
-            {
-                displayActivity(current->activity);
-                found = true;
+                // Only push reversible and non-reversed items onto LIFO stack
+                if (rev && !revd) {
+                    undoStack.push(id, parcelID, action, prev, newSt);
+                }
             }
-
-            current = current->next;
         }
-
-        if(!found)
-        {
-            cout << "\nNo Activity History Found.\n";
-        }
+        file.close();
     }
 
-    /*=================================
-         FIND ACTIVITY
-    =================================*/
-
-    ActivityNode* findActivity(int activityID)
-    {
-        ActivityNode* current = head;
-
-        while(current != NULL)
-        {
-            if(current->activity.activityID
-               == activityID)
-            {
-                return current;
-            }
-
-            current = current->next;
-        }
-
-        return NULL;
-    }
-
-    /*=================================
-         REVIEW PARCEL - not really working
-    =================================*/
-
-    void reviewParcel(string parcelID)
-    {
-        ActivityNode* current = head;
-
-        bool found = false;
-
-        string latestStatus = "";
-        string latestAction = "";
-
-        cout << "\n========== REVIEW ==========\n";
-
-        while(current != NULL)
-        {
-            if(current->activity.parcelID == parcelID)
-            {
-                found = true;
-
-                cout << "\nActivity "
-                     << current->activity.activityID
-                     << " : "
-                     << current->activity.action;
-
-                cout << "\nStatus : "
-                     << current->activity.newStatus
-                     << "\n";
-
-                latestStatus =
-                    current->activity.newStatus;
-
-                latestAction =
-                    current->activity.action;
-            }
-
-            current = current->next;
-        }
-
-        if(!found)
-        {
-            cout << "\nInvalid Parcel ID or No History.\n";
+    // Requirement 4 & 5: Reverse recent activity with full exception handling
+    void undoActivity() {
+        if (undoStack.isEmpty()) {
+            cout << "\n[Exception] No Reversible Activity Available (Stack is Empty).\n";
             return;
         }
 
-        cout << "\nMost Recent Activity : "
-             << latestAction;
-
-        cout << "\nCurrent Status       : "
-             << latestStatus;
-
-        cout << "\n============================\n";
-    }
-
-    /*=================================
-            UNDO ACTIVITY (Integrated with Task 1) but currently need improving
-    ==================================*/
-    void undoActivity()
-    {
-        if(undoStack.isEmpty())
-        {
-            cout << "\nNo Reversible Activity Available.\n";
+        UndoNode topItem = undoStack.peek();
+        if (topItem.activityID == -1) {
+            cout << "\n[Exception] Stack read error.\n";
             return;
         }
 
-        int activityID = undoStack.peek();
-        ActivityNode* actNode = findActivity(activityID);
-
-        if(actNode == NULL)
-        {
-            cout << "\nActivity Not Found.\n";
-            return;
-        }
-
-        Activity& activity = actNode->activity;
-
-        if(activity.reversed)
-        {
-            cout << "\nActivity Already Reversed.\n";
-            return;
-        }
-
-        if(!activity.reversible)
-        {
-            cout << "\nCannot Reverse Activity.\n";
-            return;
-        }
-
-        cout << "\nUndo Activity #" << activity.activityID 
-             << " for Parcel " << activity.parcelID << " ? (Y/N): ";
-
+        cout << "\nUndo Activity #" << topItem.activityID 
+             << " (Parcel: " << topItem.parcelID << ", Action: " << topItem.action 
+             << ") ? (Y/N): ";
         char choice;
         cin >> choice;
         cin.ignore(10000, '\n');
 
-        if(choice != 'Y' && choice != 'y')
-        {
+        if (choice != 'Y' && choice != 'y') {
             cout << "\nUndo Cancelled.\n";
             return;
         }
 
-        // Use Task1ParcelManager to safely check and revert the status
+        // Validate via Task1ParcelManager
         Task1ParcelManager task1Mgr;
-        if (!task1Mgr.load())
-        {
-            cout << "\nFailed to load parcel.txt for undo operation.\n";
+        if (!task1Mgr.load()) {
+            cout << "\n[Exception] Failed to load parcel.txt records.\n";
             return;
         }
 
         char currentStatus[30];
-        if (!task1Mgr.status(activity.parcelID.c_str(), currentStatus))
-        {
-            cout << "\nParcel Not Found in Records.\n";
+        if (!task1Mgr.status(topItem.parcelID.c_str(), currentStatus)) {
+            cout << "\n[Exception] Invalid Parcel ID or parcel missing from records.\n";
+            undoStack.pop(); // Clear invalid stale node
             return;
         }
 
-        // Verify state matches the new status before reverting
-        if (string(currentStatus) != activity.newStatus)
-        {
-            cout << "\nInvalid Parcel State. Current state differs from activity log.\nUndo Rejected.\n";
+        if (string(currentStatus) != topItem.newStatus) {
+            cout << "\n[Exception] Invalid Parcel State. Current status (" << currentStatus 
+                 << ") differs from log (" << topItem.newStatus << "). Undo Rejected.\n";
             return;
         }
 
-        // Apply previous status using Task 1's validation/transition rules
-        if (!task1Mgr.setStatus(activity.parcelID.c_str(), activity.previousStatus.c_str()))
-        {
-            cout << "\nTask 1 rejected the status rollback (invalid transition).\nUndo Failed.\n";
+        // Apply rollback status via Task 1 transition rules
+        if (!task1Mgr.setStatus(topItem.parcelID.c_str(), topItem.previousStatus.c_str())) {
+            cout << "\n[Exception] Task 1 rejected state rollback (invalid transition rule).\n";
             return;
         }
 
-        activity.reversed = true;
         undoStack.pop();
 
-        // Record the undo action itself
-        recordActivity(
-            activity.parcelID,
-            "UNDO - " + activity.action,
-            activity.newStatus,
-            activity.previousStatus,
-            false
-        );
+        // Log the reversal
+        recordActivity(topItem.parcelID, "UNDO - " + topItem.action, topItem.newStatus, topItem.previousStatus, false, true);
 
-        cout << "\nUndo Successful. Parcel " << activity.parcelID 
-             << " reverted to " << activity.previousStatus << ".\n";
+        cout << "\nUndo Successful! Parcel " << topItem.parcelID 
+             << " restored to status: " << topItem.previousStatus << ".\n";
     }
 };
-ActivityManager manager; //global variable reusing
-void loadActivitiesFromFile()
-{
-    ifstream file("activity.txt");
 
-    if(!file)
-    {
-        return;
-    }
-
-    string line;
-
-    while(getline(file, line))
-    {
-        cout << line << endl;
-    }
-
-    file.close();
-}
 /*=================================
-            MAIN
+          TASK 4 MENU
 ==================================*/
-
-void task4menu()
-{
+inline void task4menu() {
+    ActivityManager manager;
     
+    manager.loadUndoStackFromFile();
 
-    // Dynamically load parcels from parcel.txt instead of hardcoding
-    const int maxParcels = 100;
-    Parcel parcels[maxParcels];
-    int totalParcels = 0;
-
-    ifstream parcelFile("parcel.txt");
-    char line[300];
-    if (parcelFile) {
-        parcelFile.getline(line, 300); 
-        while (parcelFile.getline(line, 300) && totalParcels < maxParcels) {
-            char* id = strtok(line, "|"); // strtok means terminating c strings
-            // Skip name, address, etc., read until status
-            char* token = NULL;
-            char lastToken[50] = "";
-            while ((token = strtok(NULL, "|")) != NULL) {
-                strcpy(lastToken, token);
-            }
-          cutReturn(lastToken); //from task 2 apaprently
-            if (id != NULL) {
-                parcels[totalParcels] = Parcel(id, lastToken);
-                totalParcels++;
-            }
-        }
-    }
     int choice;
-
-    do
-    {
+    do {
         cout << "\n================================";
-        cout << "\n PARCEL ACTIVITY MANAGEMENT";
+        cout << "\n TASK 4: ACTIVITY & UNDO MANAGEMENT";
         cout << "\n================================";
-        cout << "\n1. Display Recorded Activity";
-        cout << "\n2. Display Parcels history?";
-        cout << "\n3. Review Parcel";
-        cout << "\n4. Undo Last Activity";
-        cout << "\n5. Exit";
+        cout << "\n1. Display All Recorded Activities";
+        cout << "\n2. Display History for Selected Parcel";
+        cout << "\n3. Review & Retrieve Parcel History";
+        cout << "\n4. Undo Last Activity (LIFO)";
+        cout << "\n5. Back to Main Menu";
         cout << "\nChoice : ";
 
-        cin >> choice;
-
-        switch(choice)
-        {
-            //MAYbe redundant now this is all from the task 1,2,3,5
-        case 1:
-        {
-            loadActivitiesFromFile(); 
-            break;
+        if (!(cin >> choice)) {
+            cin.clear();
+            cin.ignore(10000, '\n');
+            continue;
         }
+        cin.ignore(10000, '\n');
 
-        case 2:{
-           /*manager.displayAllActivities();
-           string id;
-
-            cout << "\nParcel ID : ";
-            cin >> id;
-
-            manager.displayParcelHistory(id);*/
-           break;
+        switch (choice) {
+            case 1:
+                displayAllActivitiesFromFile();
+                break;
+            case 2: {
+                string id;
+                cout << "Enter Parcel ID: ";
+                getline(cin, id);
+                displayParcelHistoryFromFile(id);
+                break;
+            }
+            case 3: {
+                string id;
+                cout << "Enter Parcel ID to review: ";
+                getline(cin, id);
+                reviewParcelHistory(id);
+                break;
+            }
+            case 4:
+                manager.undoActivity();
+                break;
+            case 5:
+                cout << "Returning to Main Menu...\n";
+                break;
+            default:
+                cout << "Invalid choice.\n";
         }
-        case 3:
-        {
-            //necessary or can taken from the other tasks to review history is take from parcel.txt?  but not working-
-            string id;
-
-            cout << "\nParcel ID : ";
-            cin >> id;
-
-            manager.reviewParcel(id);
-
-            //to indidvidualised from the file in question
-            break;
-        }
-
-        case 4:
-        {
-            //compulsory without question
-        //need integrating
-            manager.undoActivity();
-            
-            break;
-        }
-
-        case 5:
-            cout << "\nProgram Terminated.\n";
-            break;
-
-        default:
-            cout << "\nInvalid Choice.\n";
-        }
-
-    } while(choice != 5);
-
+    } while (choice != 5);
 }
-//operation of stacks, but solve issues related..
-// display history can be done with stack to display(peek operation)
-// to undo a action/history use a POP 
-// Record parcel acvitivty use the PUSH
-//Retrieve and review ( ig push and pop or display from stack/peek )
-// Empty or nullcases use isEmpty() function for stack -- also error handling in stack research on. 

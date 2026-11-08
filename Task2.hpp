@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
+#include "History.hpp"
 // TASK 2 Parcel Service and Collection Management Module
 // Data structure used is a PRIORITY QUEUE (array)
 // enqueue adds at the rear, no sorting, so O(1)
@@ -347,6 +348,8 @@ void createRequest() {
     cout << "Request " << req.requestId << " created for parcel " << req.parcelId << ", priority " << req.priority << "." << endl;
     saveRequests();
 //recorded inside the activity management but how? 
+// Inside createRequest or finishRequest:
+recordActivity(req.parcelId, "Service Request Created", "Registered", "Pending Request", true);
 }
 
 void displayActiveRequests() {
@@ -377,6 +380,7 @@ void freeResource(serviceRequest r){
     if(strcmp(r.resourceId,"-") != 0){
         releaseResource(r.resourceId);
     }
+
 }
 
 // Ask staff for the result then finish the request at this index
@@ -476,6 +480,8 @@ void finishRequest(int index) {
     freeResource(req);
     cout << "Request " << req.requestId << " is now " << status(req.status) << "." << endl;
     saveRequests();
+    // Inside createRequest or finishRequest:
+recordActivity(req.parcelId, "Service Request Created", "Registered", "Pending Request", true);
 }
 
 // Process the request with the highest priority
@@ -549,6 +555,8 @@ void cancelRequest() {
     freeResource(req);
     cout << "Request " << req.requestId << " cancelled." << endl;
     saveRequests();
+    // Inside createRequest or finishRequest:
+recordActivity(req.parcelId, "Service Request Created", "Registered", "Pending Request", true);
 }
 
 void searchRequest() {
@@ -609,6 +617,7 @@ bool assignResource(const char* requestId, const char* resourceId) {
     copyText(activeRequests.arr[index].resourceId,resourceId,10);
     activeRequests.arr[index].status = assigned;
     saveRequests();
+    
     return true;
 }
 
