@@ -23,7 +23,7 @@
 23|P006|Status Update|Registered|Prepared for Collection|1|0
 24|P007|Status Update|Registered|Return to Sender|1|0
 25|P010|Status Update|Registered|Prepared for Collection|1|0
-26|P011|Status Update|Registered|On Hold|1|1
+26|P011|Status Update|Registered|On Hold|1|0
 27|P010|Request REQ001 created (Collection)|Prepared for Collection|Prepared for Collection|0|0
 28|P010|Resource Assigned (C01 - Main Counter 1, Req: REQ001)|Pending|Assigned|0|0
 29|P010|Status Update|Prepared for Collection|Collected|0|0
@@ -39,6 +39,3 @@
 39|P005|Request REQ006 created (Collection)|Prepared for Collection|Prepared for Collection|0|0
 40|P006|Request REQ007 created (Collection)|Prepared for Collection|Prepared for Collection|0|0
 41|P007|Request REQ008 created (Return to Sender)|Return to Sender|Return to Sender|0|0
-42|P011|Status Update|On Hold|Registered|0|0
-43|P011|UNDO - Status Update|On Hold|Registered|0|1
-44|SYSTEM|Resource Unavailable (D02)|Available|Unavailable|0|0
