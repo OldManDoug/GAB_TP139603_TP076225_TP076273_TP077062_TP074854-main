@@ -59,7 +59,7 @@ void task2Menu() {
     } while (choice != 0);
 }
 
-//main meny 
+//main menu
 int main(){
 int choice;
 loadRequests();   // task 2, read servicerequest.txt when program starts
@@ -114,7 +114,6 @@ syncWithRequests();   // task 3, match resource.txt with the requests
         }
     } while (choice != 0);
     saveRequests();   // task 2, write servicerequest.txt before exit
-    //before exit save each tasks 1,3,4,5
 
     return 0;
 }

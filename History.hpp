@@ -81,7 +81,7 @@ inline void displayAllActivitiesFromFile() {
         hasContent = true;
 
         char buffer[300];
-        strcpy(buffer, line.c_str());
+        strcpy(buffer, line.c_str()); //copies from buffer the activities
         char* fields[10];
         int count = 0;
         char* token = strtok(buffer, "|");
@@ -89,7 +89,7 @@ inline void displayAllActivitiesFromFile() {
             fields[count++] = token;
             token = strtok(NULL, "|");
         }
-
+//the state is recorded
         if (count >= 6) {
             cout << "Activity ID : " << fields[0] << endl;
             cout << "Parcel ID   : " << fields[1] << endl;

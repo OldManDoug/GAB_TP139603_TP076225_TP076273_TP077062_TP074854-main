@@ -9,4 +9,4 @@ P007|Daniel Lim|44 Jalan Bunga|58100|Gadget Hub|Wrong phone case|0.3|Normal|2026
 P008|Kavitha Rao|17 Jalan Mawar|57100|Ceramic Studio|Coffee mugs|1.1|Fragile|2026-11-10 10:15|Registered
 P009|Chong Wei Jie|3 Jalan Ilmu|57000|Tech Gadgets|Laptop charger|0.6|Normal|2026-11-10 10:30|Registered
 P010|Farah Nabila|28 Jalan Cempaka|56100|Printing Express|Documents|0.2|Document|2026-11-10 10:45|Collected
-P011|Jason Ong|6 Lorong Kenari|58000|Unknown Sender|Unlabelled box|3.0|Normal|2026-11-10 11:00|On Hold
+P011|Jason Ong|6 Lorong Kenari|58000|Unknown Sender|Unlabelled box|3.0|Normal|2026-11-10 11:00|Registered
