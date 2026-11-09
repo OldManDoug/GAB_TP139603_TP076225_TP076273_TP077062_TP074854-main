@@ -1,9 +1,12 @@
 ParcelID|RecipientName|Address|Postcode|SenderAddress|Content|WeightKg|ParcelType|ArrivalTime|Status
-P001|John Quincy Adams|14 Madman Avenue|55000|23 Black Lane|Textbooks|0.5|Normal|2026-11-02 09:15|Registered
-P002|Siti Aminah|8 Jalan Damai|57000|Shop Lazada KL|Red colored gecko|0.9|Live Animal|2026-11-02 09:40|Registered
-P003|Raj Kumar|22 Taman Bukit|58000|Pasar Fresh Mart|Fresh fish|2.0|Perishable|2026-11-02 10:05|Registered
-P004|Lee Wei Ming|5 Jalan Indah|55100|Glass Gallery|Glass vase|1.5|Fragile|2026-11-02 10:30|Registered
-P005|Nur Aisyah|31 Lorong Aman|56000|Fashion Store|Dress|0.4|Normal|2026-11-02 11:00|Registered
-P006|Ahmad Faiz|17 Jalan Mawar|57100|Tech Gadgets|Laptop charger|0.6|Normal|2026-11-03 08:50|Registered
-P007|Mei Ling Tan|9 Taman Seri|55200|Book Depot|Notebooks|1.2|Normal|2026-11-03 09:20|Registered
-P008|Daniel Lim|44 Jalan Bunga|58100|Flower Shop|Flower bouquet|0.8|Perishable|2026-11-03 10:10|Registered
+P001|Ali Hassan|12 Jalan Teknologi|57000|Shopee Mall KL|Textbooks|1.2|Normal|2026-11-10 08:30|Prepared for Collection
+P002|Siti Aminah|8 Jalan Damai|57000|Pet Paradise|Pet hamster|0.5|Live Animal|2026-11-10 08:45|Special Handling
+P003|Raj Kumar|22 Taman Bukit Jalil|57000|Fresh Mart|Frozen seafood|2.5|Perishable|2026-11-10 09:00|Assigned for Delivery
+P004|Lee Wei Ming|5 Jalan Indah|55100|Glass Gallery|Glass vase|1.5|Fragile|2026-11-10 09:15|Assigned for Delivery
+P005|Nur Aisyah|31 Lorong Aman|56000|Fashion Store|Dress|0.4|Normal|2026-11-10 09:30|Prepared for Collection
+P006|Tan Mei Ling|9 Taman Seri|55200|Book Depot|Notebooks|0.8|Normal|2026-11-10 09:45|Prepared for Collection
+P007|Daniel Lim|44 Jalan Bunga|58100|Gadget Hub|Wrong phone case|0.3|Normal|2026-11-10 10:00|Return to Sender
+P008|Kavitha Rao|17 Jalan Mawar|57100|Ceramic Studio|Coffee mugs|1.1|Fragile|2026-11-10 10:15|Registered
+P009|Chong Wei Jie|3 Jalan Ilmu|57000|Tech Gadgets|Laptop charger|0.6|Normal|2026-11-10 10:30|Registered
+P010|Farah Nabila|28 Jalan Cempaka|56100|Printing Express|Documents|0.2|Document|2026-11-10 10:45|Collected
+P011|Jason Ong|6 Lorong Kenari|58000|Unknown Sender|Unlabelled box|3.0|Normal|2026-11-10 11:00|Registered

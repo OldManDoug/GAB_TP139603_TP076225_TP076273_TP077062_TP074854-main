@@ -5,11 +5,13 @@
 
 #include "ResourceManager.hpp"
 
+
 const int T3_SVC_COLLECTION = 1;
 const int T3_SVC_DELIVERY = 2;
 const int T3_SVC_SPECIAL = 3;
 const int T3_SVC_RETURN = 4;
 const int T3_REQ_PENDING = 1;
+const int T3_REQ_ASSIGNED = 2;
 
 // TASK 2 ADAPTER
 int t3RequestCount() { return activeRequests.size; }
@@ -17,6 +19,8 @@ string t3RequestId(int i) { return activeRequests.arr[i].requestId; }
 string t3ParcelId(int i) { return activeRequests.arr[i].parcelId; }
 int t3ServiceType(int i) { return activeRequests.arr[i].serviceType; }
 int t3RequestStatus(int i) { return activeRequests.arr[i].status; }
+int t3Priority(int i) { return activeRequests.arr[i].priority; }
+string t3ResourceId(int i) { return activeRequests.arr[i].resourceId; }
 
 int t3FindRequest(string requestId) {
     for (int i = 0; i < t3RequestCount(); i++) {
@@ -47,6 +51,8 @@ bool assignFromFront(string requestId, string parcelId, int type) {
     resourceManager.occupy(r, requestId, parcelId);
     cout << "  " << requestId << " -> " << resourceId << " (" << r->name << ")" << endl;
     return true;
+    // to try integrate task 4 FOR resources have been given and made
+    
 }
 
 void purgeWaiting(int type) {
@@ -68,6 +74,36 @@ int dispatchWaiting(int type) {
         if (assignFromFront(requestId, t3ParcelId(t3FindRequest(requestId)), type)) assigned++;
     }
     return assigned;
+}
+
+// STARTUP SYNC
+// resource.txt and servicerequest.txt are saved separately, so make them agree when the program starts
+void syncWithRequests() {
+    // 1. Free any resource whose request is no longer assigned to it
+    for (int k = 0; k < resourceManager.size(); k++) {
+        Resource* r = resourceManager.at(k);
+        if (r->status != RES_OCCUPIED) continue;
+        int i = t3FindRequest(r->requestId);
+        if (i == -1 || t3RequestStatus(i) != T3_REQ_ASSIGNED || t3ResourceId(i) != r->resourceId) {
+            cout << "[Task 3] " << r->resourceId << " was holding " << r->requestId
+                 << ", which is no longer active. " << r->resourceId << " freed." << endl;
+            resourceManager.restoreFree(r);
+        }
+    }
+    // 2. Each assigned request gets its resource back, or returns to pending if it cannot
+    for (int i = 0; i < t3RequestCount(); i++) {
+        if (t3RequestStatus(i) != T3_REQ_ASSIGNED) continue;
+        string requestId = t3RequestId(i);
+        Resource* r = resourceManager.find(t3ResourceId(i));
+        if (r != NULL && r->status == RES_OCCUPIED && r->requestId == requestId) continue;
+        if (r != NULL && r->status == RES_AVAILABLE && r->type == resourceTypeForService(t3ServiceType(i))) {
+            resourceManager.restoreOccupied(r, requestId, t3ParcelId(i));
+            continue;
+        }
+        cout << "[Task 3] " << requestId << " cannot keep " << t3ResourceId(i) << ", it is back to pending." << endl;
+        unassignResource(requestId.c_str());
+    }
+    resourceManager.save();
 }
 
 // INPUT HELPERS
@@ -101,6 +137,10 @@ int resReadInt(string prompt) {
 bool resValidName(string name) {
     if (name.empty() || (int)name.size() > RES_NAME_MAX_LEN) {
         cout << "Name must be 1 to " << RES_NAME_MAX_LEN << " characters." << endl;
+        return false;
+    }
+    if (name.find('|') != string::npos) {
+        cout << "Name cannot contain |." << endl;
         return false;
     }
     return true;
@@ -156,6 +196,7 @@ void renameOrRemoveResource() {
     string name = resReadLine("New name: ");
     if (resValidName(name)) {
         r->name = name;
+        resourceManager.save();
         cout << resourceId << " renamed." << endl;
     }
 }
@@ -167,7 +208,24 @@ void assignPendingRequests() {
         return;
     }
     int assigned = dispatchWaiting(RES_TYPE_COUNTER) + dispatchWaiting(RES_TYPE_DELIVERY);
+
+    // Allocation rule: highest Task 2 priority first.
+    // Insertion sort is stable, so equal priority keeps arrival order (same tie rule as Task 2).
+    int order[maxRequest];
+    int n = 0;
     for (int i = 0; i < t3RequestCount(); i++) {
+        if (t3RequestStatus(i) != T3_REQ_PENDING) continue;
+        int j = n;
+        while (j > 0 && t3Priority(order[j - 1]) < t3Priority(i)) {
+            order[j] = order[j - 1];
+            j--;
+        }
+        order[j] = i;
+        n++;
+    }
+
+    for (int k = 0; k < n; k++) {
+        int i = order[k];
         if (t3RequestStatus(i) != T3_REQ_PENDING) continue;
         string requestId = t3RequestId(i);
         int type = resourceTypeForService(t3ServiceType(i));

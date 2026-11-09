@@ -9,13 +9,15 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include "History.hpp"
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
 
-// Task 2 integration: prevent deleting parcels with an active request.
+// Task 2 integration: active-request checks and request closure for terminal parcel actions.
 bool parcelActiveRequest(const char* id);
+void parcelClosed(const char* id,const char* reason);
 
 // Task 1 uses a custom singly linked list for the parcel master records.
 // The text file is shared with Task 2 and uses the agreed ten-column format.
@@ -191,25 +193,23 @@ public:
         if (!n || n->data.status.size()>=30) return false;
         std::strcpy(out,n->data.status.c_str()); return true;
     }
-   
-    bool setStatus(const char* id,const char* value) {
+
+    // reversible=false when another module owns the change (Task 2 requests, Task 4 undo itself)
+    bool setStatus(const char* id,const char* value,bool reversible=true) {
         if (!id||!value||!validStatus(value)) return false;
         Task1ParcelNode* n=find(id);
         if (!n||!allowedTransition(n->data.status,value)) return false;
-        
-        std::string old=n->data.status; 
+
+        std::string old=n->data.status;
         n->data.status=value;
 
         if (save()) {
             // When status is saved, it is sent to activity record to history-task 4
-            std::ofstream actLog("activity.txt", std::ios::app);
-            if (actLog) {
-                actLog << id << "|Status Update|" << old << "|" << value << "|true\n";
-            } //into the file the status needed for task 4 to edit
+            recordActivity(id, "Status Update", old, value, reversible);
             return true;
         }
-        
-        n->data.status=old; 
+
+        n->data.status=old;
         return false;
 
     }
@@ -241,6 +241,7 @@ public:
     }
     bool removeParcel(const char* id) {
         if (!id||!*id) return false;
+        if (parcelActiveRequest(id)) return false;
         Task1ParcelNode *prev=NULL,*n=head;
         while(n&&n->data.id!=id) { prev=n; n=n->next; }
         if (!n || parcelActiveRequest(id) || (n->data.status!="Registered"&&n->data.status!="Cancelled")) return false;
@@ -267,20 +268,24 @@ public:
     // The master linked list is kept in arrival order; selecting the first
     // matching route and processing it provides FIFO handling without a second structure.
     bool processNext(const char* queued,const char* completed) {
+        bool skipped=false;
         for(Task1ParcelNode* n=head;n;n=n->next) {
             if(n->data.status==queued) {
                 const std::string id=n->data.id;
+                // a parcel with a Task 2 request is finished through Task 2 so its counter/driver is released
+                if(parcelActiveRequest(id.c_str())) { std::cout<<id<<" has an active service request; process it in Task 2.\n"; skipped=true; continue; }
                 if(!setStatus(id.c_str(),completed)) {
                     std::cout<<"Parcel processing failed; no status was changed.\n"; return false;
                 }
                 std::cout<<"Processed "<<id<<"; status updated to "<<completed<<".\n"; return true;
             }
         }
-        std::cout<<"Cannot process an empty queue.\n"; return false;
+        if(!skipped) std::cout<<"Cannot process an empty queue.\n";
+        return false;
     }
     void menu() {
         int choice=0;
-        do { //this part need to clean leh 
+        do { //this part need to clean leh
             std::cout<<"\n===== TASK 1: PARCEL INTAKE, SORTING & PROCESSING =====\n"
                 <<"1 Register parcel  2 Display all  3 Search/view by ID\n"
                 <<"4 Classify/route incoming parcel  5 Process next action queue\n"
@@ -309,6 +314,7 @@ public:
                 std::string id; std::cout<<"Parcel ID: "; std::getline(std::cin,id);
                 Task1ParcelNode* n=find(id);
                 if(!n) { std::cout<<"Parcel not found.\n"; continue; }
+                if(parcelActiveRequest(id.c_str())) { std::cout<<"This parcel has an active service request; cancel it in Task 2 before routing it again.\n"; continue; }
                 if(n->data.status!="Registered"&&n->data.status!="On Hold"&&n->data.status!="Handled") {
                     std::cout<<"This parcel is already routed or completed; it cannot be routed again.\n"; continue;
                 }
@@ -334,13 +340,17 @@ public:
                 std::cout<<(updateDetails(id.c_str(),name,address,postcode)?"Parcel details updated.\n":"Update rejected: parcel not found, completed, or information invalid.\n");
             } else if(choice==7) {
                 std::string id; std::cout<<"Parcel ID to cancel: "; std::getline(std::cin,id);
-                std::cout<<(setStatus(id.c_str(),"Cancelled")?"Parcel cancelled.\n":"Cancellation rejected: parcel not found or already completed.\n");
+                if(setStatus(id.c_str(),"Cancelled",false)) { std::cout<<"Parcel cancelled.\n"; parcelClosed(id.c_str(),"Cancelled"); }
+                else std::cout<<"Cancellation rejected: parcel not found or already completed.\n";
             } else if(choice==8) {
                 std::string id; std::cout<<"Parcel ID reported missing: "; std::getline(std::cin,id);
-                std::cout<<(setStatus(id.c_str(),"Missing")?"Parcel marked Missing.\n":"Update rejected: parcel not found or already completed.\n");
+                if(setStatus(id.c_str(),"Missing",false)) { std::cout<<"Parcel marked Missing.\n"; parcelClosed(id.c_str(),"Missing"); }
+                else std::cout<<"Update rejected: parcel not found or already completed.\n";
             } else if(choice==9) {
                 std::string id; std::cout<<"Parcel ID to remove: "; std::getline(std::cin,id);
-                std::cout<<(removeParcel(id.c_str())?"Parcel removed.\n":"Removal rejected: parcel has an active request or is not Registered/Cancelled.\n");
+// Task 2 integration: active-request checks and request closure for terminal parcel actions.
+bool parcelActiveRequest(const char* id);
+void parcelClosed(const char* id,const char* reason);
             } else if(choice==10) {
                 std::cout<<"Registered arrivals:\n"; displayStatus("Registered");
                 std::cout<<"Recipient collection:\n"; displayStatus("Prepared for Collection");
@@ -358,6 +368,7 @@ public:
 inline bool parcelExists(const char* id) { Task1ParcelManager p; return p.load()&&p.exists(id); }
 inline bool getParcelRecipient(const char* id,char* out) { Task1ParcelManager p; return p.load()&&p.recipient(id,out); }
 inline bool getParcelStatus(const char* id,char* out) { Task1ParcelManager p; return p.load()&&p.status(id,out); }
-inline void updateParcelStatus(const char* id,const char* value) { Task1ParcelManager p; if(p.load()) p.setStatus(id,value); }
+// Task 2 owns the request, so its parcel updates are logged as not reversible
+inline void updateParcelStatus(const char* id,const char* value) { Task1ParcelManager p; if(p.load()) p.setStatus(id,value,false); }
 
 #endif

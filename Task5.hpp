@@ -2,6 +2,7 @@
 #define Task5_HPP
 
 #include "Task1.hpp"
+#include "History.hpp"
 
 using namespace std;
 bool parcelActiveRequest(const char* id);
@@ -170,15 +171,30 @@ public:
         // Task 1 assigns a unique ID and the exact initial status Registered.
         if (!ready || !records.registerParcel(p,id)) return false;
         refreshRecord(id);
+//IMPLEMENTATION: Log activity for Task 4 audit trail
+        // not reversible: Task 4 undo restores a parcel status, and "None" is not a status
+        recordActivity(id, "Parcel Registered", "None", "Registered", false);
+
         return true;
     }
     bool updateCategory(const string& id, const string& category) {
-        if (!ready || !tree.find(id) || !records.updateCategory(id.c_str(),category)) return false;
+        if (!ready || !tree.find(id)) return false;
+        string oldCategory=tree.find(id)->type;
+        if (!records.updateCategory(id.c_str(),category)) return false;
+        // IMPLEMENTATION: Log activity for Task 4 audit trail
+        // not reversible: a category is not a parcel status, so Task 4 undo cannot restore it
+        recordActivity(id, "Category Update", oldCategory, category, false);
         refreshRecord(id); return true;
+
     }
     bool updateDetails(const string& id, const string& name,
                        const string& address, const string& postcode) {
-        if (!ready || !tree.find(id) || !records.updateDetails(id.c_str(),name,address,postcode)) return false;
+        if (!ready || !tree.find(id)) return false;
+        string oldDetails=tree.find(id)->recipient + " / " + tree.find(id)->address;
+        if (!records.updateDetails(id.c_str(),name,address,postcode)) return false;
+       // IMPLEMENTATION: Log activity for Task 4 audit trail
+        recordActivity(id, "Details Update", oldDetails, name + " / " + address, false);
+        //AFTER DOING THIS refreshes to show it displayed
         refreshRecord(id); return true;
     }
     bool removeParcel(const string& id, string& reason) {
@@ -193,6 +209,8 @@ public:
             reason="Only Registered or Cancelled parcels can be removed; also check file write access.";
             return false;
         }
+        // IMPLEMENTATION: Log activity for Task 4 audit trail (Usually non-reversible or terminal)
+        recordActivity(id, "Parcel Removed", "Registered/Cancelled", "Removed", false);
         tree.remove(id);
         reason.clear(); return true;
     }
