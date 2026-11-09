@@ -6,6 +6,8 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <fstream>
+#include <cstdlib>
 #include "History.hpp" //to integrate with task 4 to record activities
 using namespace std;
 
@@ -19,6 +21,7 @@ const int RES_UNAVAILABLE = 3;
 const int RES_MAX = 20;
 const int RES_QUEUE_MAX = 50;
 const int RES_NAME_MAX_LEN = 30;
+const string RES_FILE = "resource.txt";
 
 struct Resource {
     string resourceId;
@@ -165,6 +168,8 @@ public:
         resourceCount = 0;
         nextNo[0] = 1;
         nextNo[1] = 1;
+        if (load()) return;
+        // First run with no resource.txt: create the default resources
         addResource(RES_TYPE_COUNTER, "Main Counter 1");
         addResource(RES_TYPE_COUNTER, "Main Counter 2");
         addResource(RES_TYPE_COUNTER, "Express Counter");
@@ -174,6 +179,88 @@ public:
     }
 
     bool isFull() { return resourceCount >= RES_MAX; }
+    int size() { return resourceCount; }
+    Resource* at(int i) { return &resources[i]; }
+
+    // PERMANENT STORAGE (resource.txt)
+    // ResourceID|Type|Name|Status|RequestID|ParcelID|OffAfterJob|JobsHandled
+    void save() {
+        ofstream file(RES_FILE.c_str());
+        if (!file) {
+            cout << "[Task 3] Cannot write " << RES_FILE << endl;
+            return;
+        }
+        file << "ResourceID|Type|Name|Status|RequestID|ParcelID|OffAfterJob|JobsHandled" << endl;
+        for (int i = 0; i < resourceCount; i++) {
+            Resource r = resources[i];
+            string requestId = r.requestId.empty() ? "-" : r.requestId;
+            string parcelId = r.parcelId.empty() ? "-" : r.parcelId;
+            file << r.resourceId << "|" << r.type << "|" << r.name << "|" << r.status << "|" << requestId << "|"
+                 << parcelId << "|" << (r.offAfterJob ? 1 : 0) << "|" << r.jobsHandled << endl;
+        }
+    }
+
+    bool load() {
+        ifstream file(RES_FILE.c_str());
+        if (!file) return false;
+        string line;
+        getline(file, line);
+        while (getline(file, line) && resourceCount < RES_MAX) {
+            if (!line.empty() && line[line.size() - 1] == '\r') line.erase(line.size() - 1);
+            string f[8];
+            int n = 0;
+            size_t start = 0;
+            while (n < 8) {
+                size_t bar = line.find('|', start);
+                if (bar == string::npos) {
+                    f[n++] = line.substr(start);
+                    break;
+                }
+                f[n++] = line.substr(start, bar - start);
+                start = bar + 1;
+            }
+            if (n != 8) continue;
+
+            Resource r;
+            r.resourceId = f[0];
+            r.type = atoi(f[1].c_str());
+            r.name = f[2];
+            r.status = atoi(f[3].c_str());
+            r.requestId = f[4] == "-" ? "" : f[4];
+            r.parcelId = f[5] == "-" ? "" : f[5];
+            r.offAfterJob = f[6] == "1";
+            r.jobsHandled = atoi(f[7].c_str());
+            if (r.type != RES_TYPE_COUNTER && r.type != RES_TYPE_DELIVERY) continue;
+            if (r.resourceId.size() < 2 || indexOf(r.resourceId) != -1) continue;
+            if (r.status != RES_AVAILABLE && r.status != RES_OCCUPIED && r.status != RES_UNAVAILABLE) r.status = RES_AVAILABLE;
+
+            resources[resourceCount++] = r;
+            if (r.status == RES_AVAILABLE) freeQueue(r.type)->addQueue(r.resourceId);
+            int number = atoi(r.resourceId.substr(1).c_str());
+            if (number >= nextNo[r.type - 1]) nextNo[r.type - 1] = number + 1;
+        }
+        return resourceCount > 0;
+    }
+
+    // STARTUP SYNC (used by syncWithRequests, no activity is logged)
+    void restoreOccupied(Resource* r, string requestId, string parcelId) {
+        freeQueue(r->type)->remove(r->resourceId);
+        r->status = RES_OCCUPIED;
+        r->requestId = requestId;
+        r->parcelId = parcelId;
+    }
+
+    void restoreFree(Resource* r) {
+        r->requestId = "";
+        r->parcelId = "";
+        if (r->offAfterJob) {
+            r->offAfterJob = false;
+            r->status = RES_UNAVAILABLE;
+            return;
+        }
+        r->status = RES_AVAILABLE;
+        freeQueue(r->type)->addQueue(r->resourceId);
+    }
     ResourceQueue* freeQueue(int type) { return &freeQueues[type - 1]; }
     ResourceQueue* waitingQueue(int type) { return &waitingQueues[type - 1]; }
 
@@ -191,6 +278,7 @@ public:
         r.name = name;
         resources[resourceCount++] = r;
         freeQueue(type)->addQueue(r.resourceId);
+        save();
         // TASK 4 INTEGRATION: Log resource registration
         recordActivity("SYSTEM", "Resource Registered (" + r.resourceId + " - " + r.name + ")", "None", "Available", false);
         return r.resourceId;
@@ -208,6 +296,7 @@ public:
             resources[j] = resources[j + 1];
         }
         resourceCount--;
+        save();
         cout << resourceId << " removed." << endl;
     }
 
@@ -218,10 +307,12 @@ public:
         r->status = RES_OCCUPIED;
         r->requestId = requestId;
         r->parcelId = parcelId;
+        save();
         // INTEGRATION HOOK: Log resource assignment into activity.txt
         // This captures the required "relevant request or resource information trial and error"
+        // Not reversible: "Pending" and "Assigned" are request statuses, so Task 4 undo can never match them to a parcel
         string actionDesc = "Resource Assigned (" + r->resourceId + " - " + r->name + ", Req: " + requestId + ")";
-        recordActivity(parcelId, actionDesc, "Pending", "Assigned", true);
+        recordActivity(parcelId, actionDesc, "Pending", "Assigned", false);
     }
 
     void release(string resourceId) {
@@ -246,11 +337,13 @@ if (!r->parcelId.empty()) {
         if (r->offAfterJob) {
             r->offAfterJob = false;
             r->status = RES_UNAVAILABLE;
+            save();
             cout << " and is now unavailable." << endl;
             return;
         }
         r->status = RES_AVAILABLE;
         freeQueue(r->type)->addQueue(resourceId);
+        save();
         cout << " and is available again." << endl;
         if (!waitingQueue(r->type)->isEmpty()) {
             cout << "[Task 3] Requests are waiting for " << resTypePlural(r->type)
@@ -266,6 +359,7 @@ if (!r->parcelId.empty()) {
         if (r->status == RES_OCCUPIED) {
             if (r->offAfterJob) {
                 r->offAfterJob = false;
+                save();
                 cout << r->resourceId << " will stay available after " << r->requestId << "." << endl;
             } else {
                 cout << r->resourceId << " is occupied by " << r->requestId
@@ -275,6 +369,7 @@ if (!r->parcelId.empty()) {
         }
         r->status = RES_AVAILABLE;
         freeQueue(r->type)->addQueue(r->resourceId);
+        save();
         cout << r->resourceId << " is now available." << endl;
         return true;
     }
@@ -286,6 +381,7 @@ if (!r->parcelId.empty()) {
         }
         if (r->status == RES_OCCUPIED) {
             r->offAfterJob = true;
+            save();
             cout << r->resourceId << " will become unavailable after " << r->requestId << "." << endl;
             return;
         }
@@ -293,6 +389,7 @@ if (!r->parcelId.empty()) {
         recordActivity("SYSTEM", "Resource Unavailable (" + r->resourceId + ")", "Available", "Unavailable", false);
         freeQueue(r->type)->remove(r->resourceId);
         r->status = RES_UNAVAILABLE;
+        save();
         cout << r->resourceId << " is now unavailable." << endl;
     }
 

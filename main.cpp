@@ -25,7 +25,7 @@ int readChoice() {
 
 
 
-// TASK 2 MENU - Parcel Service and Collection Management Module
+// Task 2 menu 
 void task2Menu() {
     int choice;
 
@@ -63,6 +63,7 @@ void task2Menu() {
 int main(){
 int choice;
 loadRequests();   // task 2, read servicerequest.txt when program starts
+syncWithRequests();   // task 3, match resource.txt with the requests
 
 // task 4 , 1, 3, 5 read when prigram starts
 
