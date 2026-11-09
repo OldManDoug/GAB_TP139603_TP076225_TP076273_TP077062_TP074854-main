@@ -1,0 +1,7 @@
+ResourceID|Type|Name|Status|RequestID|ParcelID|OffAfterJob|JobsHandled
+C01|1|Main Counter 1|1|-|-|0|1
+C02|1|Main Counter 2|2|REQ003|P002|0|0
+C03|1|Express Counter|2|REQ002|P001|0|0
+D01|2|Ahmad Faizal|2|REQ004|P003|0|0
+D02|2|Tan Wei Ling|1|-|-|0|0
+D03|2|Ravi Kumar|1|-|-|0|0

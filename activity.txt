@@ -1,13 +1,41 @@
-3|P010|Parcel Registered (Task 5 Insert)|None|Registered|1|0
-4|P003|Status Update|Registered|Handled|1|0
-5|P003|Service Request Created|Registered|Pending Request|1|0
-4|SYSTEM|Resource Registered (C01 - Main Counter 1)|None|Available|0|0
-5|SYSTEM|Resource Registered (C02 - Main Counter 2)|None|Available|0|0
-6|SYSTEM|Resource Registered (C03 - Express Counter)|None|Available|0|0
-7|SYSTEM|Resource Registered (D01 - Ahmad Faizal)|None|Available|0|0
-8|SYSTEM|Resource Registered (D02 - Tan Wei Ling)|None|Available|0|0
-9|SYSTEM|Resource Registered (D03 - Ravi Kumar)|None|Available|0|0
-P007|Status Update|Registered|Missing|true
-11|P004|Service Request Created|Registered|Pending Request|1|0
-12|P004|Resource Assigned (D01 - Ahmad Faizal, Req: REQ004)|Pending|Assigned|1|0
-13|P009|Category Update|Previous Category|Fragile|1|0
+1|SYSTEM|Resource Registered (C01 - Main Counter 1)|None|Available|0|0
+2|SYSTEM|Resource Registered (C02 - Main Counter 2)|None|Available|0|0
+3|SYSTEM|Resource Registered (C03 - Express Counter)|None|Available|0|0
+4|SYSTEM|Resource Registered (D01 - Ahmad Faizal)|None|Available|0|0
+5|SYSTEM|Resource Registered (D02 - Tan Wei Ling)|None|Available|0|0
+6|SYSTEM|Resource Registered (D03 - Ravi Kumar)|None|Available|0|0
+7|P001|Parcel Registered|None|Registered|0|0
+8|P002|Parcel Registered|None|Registered|0|0
+9|P003|Parcel Registered|None|Registered|0|0
+10|P004|Parcel Registered|None|Registered|0|0
+11|P005|Parcel Registered|None|Registered|0|0
+12|P006|Parcel Registered|None|Registered|0|0
+13|P007|Parcel Registered|None|Registered|0|0
+14|P008|Parcel Registered|None|Registered|0|0
+15|P009|Parcel Registered|None|Registered|0|0
+16|P010|Parcel Registered|None|Registered|0|0
+17|P011|Parcel Registered|None|Registered|0|0
+18|P001|Status Update|Registered|Prepared for Collection|1|0
+19|P002|Status Update|Registered|Special Handling|1|0
+20|P003|Status Update|Registered|Assigned for Delivery|1|0
+21|P004|Status Update|Registered|Assigned for Delivery|1|0
+22|P005|Status Update|Registered|Prepared for Collection|1|0
+23|P006|Status Update|Registered|Prepared for Collection|1|0
+24|P007|Status Update|Registered|Return to Sender|1|0
+25|P010|Status Update|Registered|Prepared for Collection|1|0
+26|P011|Status Update|Registered|On Hold|1|0
+27|P010|Request REQ001 created (Collection)|Prepared for Collection|Prepared for Collection|0|0
+28|P010|Resource Assigned (C01 - Main Counter 1, Req: REQ001)|Pending|Assigned|0|0
+29|P010|Status Update|Prepared for Collection|Collected|0|0
+30|P010|Resource Released (C01 - Main Counter 1, Req: REQ001)|Assigned|Processed/Released|0|0
+31|P010|Request REQ001 Completed|Prepared for Collection|Collected|0|0
+32|P001|Request REQ002 created (Collection)|Prepared for Collection|Prepared for Collection|0|0
+33|P002|Request REQ003 created (Special Handling)|Special Handling|Special Handling|0|0
+34|P003|Request REQ004 created (Delivery)|Assigned for Delivery|Assigned for Delivery|0|0
+35|P002|Resource Assigned (C02 - Main Counter 2, Req: REQ003)|Pending|Assigned|0|0
+36|P003|Resource Assigned (D01 - Ahmad Faizal, Req: REQ004)|Pending|Assigned|0|0
+37|P001|Resource Assigned (C03 - Express Counter, Req: REQ002)|Pending|Assigned|0|0
+38|P004|Request REQ005 created (Delivery)|Assigned for Delivery|Assigned for Delivery|0|0
+39|P005|Request REQ006 created (Collection)|Prepared for Collection|Prepared for Collection|0|0
+40|P006|Request REQ007 created (Collection)|Prepared for Collection|Prepared for Collection|0|0
+41|P007|Request REQ008 created (Return to Sender)|Return to Sender|Return to Sender|0|0

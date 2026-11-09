@@ -5,6 +5,7 @@
 #include <fstream>
 #include <string>
 #include <cstring>
+#include <cstdlib>
 
 using namespace std;
 
@@ -39,8 +40,10 @@ inline void recordActivity(string parcelID, string action, string previousStatus
     ifstream inFile("activity.txt");
     string line;
     if (inFile) {
+        // next ID = highest ID in the file + 1, so IDs stay unique
         while (getline(inFile, line)) {
-            if (!line.empty()) nextID++;
+            int id = atoi(line.c_str());
+            if (id >= nextID) nextID = id + 1;
         }
         inFile.close();
     }
@@ -76,7 +79,7 @@ inline void displayAllActivitiesFromFile() {
     while (getline(file, line)) {
         if (line.empty()) continue;
         hasContent = true;
-        
+
         char buffer[300];
         strcpy(buffer, line.c_str());
         char* fields[10];
