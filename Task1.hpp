@@ -15,11 +15,10 @@
 #include <windows.h>
 #endif
 
-// Task 2 integration: active-request checks and request closure for terminal parcel actions.
+// Task 2 request helpers.
 bool parcelActiveRequest(const char* id);
 void parcelClosed(const char* id,const char* reason);
 
-// Task 1 uses a custom singly linked list for the parcel master records.
 // The text file is shared with Task 2 and uses the agreed ten-column format.
 struct Task1Parcel {
     std::string id, recipient, address, postcode, sender, content;
@@ -369,88 +368,88 @@ public:
             if(n->data.status==queued) {
                 const std::string id=n->data.id;
                 // a parcel with a Task 2 request is finished through Task 2 so its counter/driver is released
-                if(parcelActiveRequest(id.c_str())) { std::cout<<id<<" has an active service request; process it in Task 2.\n"; skipped=true; continue; }
+                if(parcelActiveRequest(id.c_str())) { std::cout<<id<<" has an active request; use Task 2.\n"; skipped=true; continue; }
                 if(!setStatus(id.c_str(),completed)) {
-                    std::cout<<"Parcel processing failed; no status was changed.\n"; return false;
+                    std::cout<<"Processing failed.\n"; return false;
                 }
                 std::cout<<"Processed "<<id<<"; status updated to "<<completed<<".\n"; return true;
             }
         }
-        if(!skipped) std::cout<<"Cannot process an empty queue.\n";
+        if(!skipped) std::cout<<"Queue is empty.\n";
         return false;
     }
     void menu() {
         int choice=0;
-        do { //this part need to clean leh
-            std::cout<<"\n===== TASK 1: PARCEL INTAKE, SORTING & PROCESSING =====\n"
-                <<"1 Register parcel  2 Display all  3 Search/view by ID\n"
-                <<"4 Classify/route incoming parcel  5 Process next action queue\n"
-                <<"6 Update recipient/delivery details  7 Cancel parcel  8 Report missing\n"
-                <<"9 Remove parcel  10 Display action queues  0 Back\nChoice: ";
+        do {
+            std::cout<<"\n===== TASK 1: PARCELS =====\n"
+                <<"1 Register parcel  2 List parcels  3 Find parcel\n"
+                <<"4 Route parcel  5 Process queue\n"
+                <<"6 Edit details  7 Cancel parcel  8 Report missing\n"
+                <<"9 Remove parcel  10 Show queues  0 Back\nSelect: ";
             std::string line; std::getline(std::cin,line);
             if(line.empty()||line.find_first_not_of("0123456789")!=std::string::npos) { std::cout<<"Invalid choice.\n"; continue; }
             choice=std::atoi(line.c_str());
             if(choice<0||choice>10) { std::cout<<"Invalid choice.\n"; continue; }
             if(choice==1) {
                 Task1Parcel p;
-                std::cout<<"Recipient name: "; std::getline(std::cin,p.recipient);
-                std::cout<<"Delivery address: "; std::getline(std::cin,p.address);
+                std::cout<<"Recipient: "; std::getline(std::cin,p.recipient);
+                std::cout<<"Address: "; std::getline(std::cin,p.address);
                 std::cout<<"Postcode: "; std::getline(std::cin,p.postcode);
-                std::cout<<"Sender address: "; std::getline(std::cin,p.sender);
-                std::cout<<"Content description: "; std::getline(std::cin,p.content);
-                std::cout<<"Weight in kg: "; std::getline(std::cin,p.weight);
+                std::cout<<"Sender: "; std::getline(std::cin,p.sender);
+                std::cout<<"Content: "; std::getline(std::cin,p.content);
+                std::cout<<"Weight (kg): "; std::getline(std::cin,p.weight);
                 std::cout<<"Parcel type: "; std::getline(std::cin,p.type);
-                std::cout<<"Arrival date/time: "; std::getline(std::cin,p.arrival);
+                std::cout<<"Arrival (YYYY-MM-DD HH:MM): "; std::getline(std::cin,p.arrival);
                 std::string id;
-                if(registerParcel(p,id)) std::cout<<"Registered as "<<id<<" with status Registered.\n";
-                else std::cout<<"Registration rejected: required information is invalid or parcel.txt cannot be saved.\n";
+                if(registerParcel(p,id)) std::cout<<"Parcel "<<id<<" registered. Status: Registered.\n";
+                else std::cout<<"Registration failed: check fields or file access.\n";
             } else if(choice==2) displayAll();
             else if(choice==3) { std::string id; std::cout<<"Parcel ID: "; std::getline(std::cin,id); searchAndDisplay(id); }
             else if(choice==4) {
                 std::string id; std::cout<<"Parcel ID: "; std::getline(std::cin,id);
                 Task1ParcelNode* n=find(id);
                 if(!n) { std::cout<<"Parcel not found.\n"; continue; }
-                if(parcelActiveRequest(id.c_str())) { std::cout<<"This parcel has an active service request; cancel it in Task 2 before routing it again.\n"; continue; }
+                if(parcelActiveRequest(id.c_str())) { std::cout<<"This parcel has an active request. Finish it in Task 2 first.\n"; continue; }
                 if(n->data.status!="Registered"&&n->data.status!="On Hold"&&n->data.status!="Handled") {
-                    std::cout<<"This parcel is already routed or completed; it cannot be routed again.\n"; continue;
+                    std::cout<<"This parcel is already routed or complete.\n"; continue;
                 }
-                std::cout<<"1 Recipient collection  2 Campus delivery  3 Special handling\n4 Return to sender  5 Hold for investigation\nAction: ";
+                std::cout<<"1 Collection  2 Delivery  3 Special handling\n4 Return  5 Hold\nRoute: ";
                 std::getline(std::cin,line);
                 const char* routes[]={"Prepared for Collection","Assigned for Delivery","Special Handling","Return to Sender","On Hold"};
                 if(line.size()!=1||line[0]<'1'||line[0]>'5') { std::cout<<"Invalid route.\n"; continue; }
-                std::cout<<(setStatus(id.c_str(),routes[line[0]-'1'])?"Parcel routed successfully.\n":"Route is not valid for the parcel's current status.\n");
+                std::cout<<(setStatus(id.c_str(),routes[line[0]-'1'])?"Parcel routed.\n":"That route is not allowed for this status.\n");
             } else if(choice==5) {
-                std::cout<<"1 Collection  2 Campus delivery  3 Special handling  4 Return to sender\nQueue: ";
+                std::cout<<"1 Collection  2 Delivery  3 Special handling  4 Return\nQueue: ";
                 std::getline(std::cin,line);
                 if(line=="1") processNext("Prepared for Collection","Collected");
                 else if(line=="2") processNext("Assigned for Delivery","Delivered");
                 else if(line=="3") processNext("Special Handling","Handled");
                 else if(line=="4") processNext("Return to Sender","Returned");
-                else std::cout<<"Invalid queue choice.\n";
+                else std::cout<<"Invalid queue.\n";
             } else if(choice==6) {
                 std::string id,name,address,postcode;
                 std::cout<<"Parcel ID: "; std::getline(std::cin,id);
-                std::cout<<"Updated recipient: "; std::getline(std::cin,name);
-                std::cout<<"Updated delivery address: "; std::getline(std::cin,address);
-                std::cout<<"Updated postcode: "; std::getline(std::cin,postcode);
-                std::cout<<(updateDetails(id.c_str(),name,address,postcode)?"Parcel details updated.\n":"Update rejected: parcel not found, completed, or information invalid.\n");
+                std::cout<<"Recipient: "; std::getline(std::cin,name);
+                std::cout<<"Address: "; std::getline(std::cin,address);
+                std::cout<<"Postcode: "; std::getline(std::cin,postcode);
+                std::cout<<(updateDetails(id.c_str(),name,address,postcode)?"Details updated.\n":"Update failed: check ID or fields.\n");
             } else if(choice==7) {
-                std::string id; std::cout<<"Parcel ID to cancel: "; std::getline(std::cin,id);
-                if(setStatus(id.c_str(),"Cancelled",false)) { std::cout<<"Parcel cancelled.\n"; parcelClosed(id.c_str(),"Cancelled"); }
-                else std::cout<<"Cancellation rejected: parcel not found or already completed.\n";
+                std::string id; std::cout<<"Parcel ID: "; std::getline(std::cin,id);
+                if(setStatus(id.c_str(),"Cancelled",false)) { std::cout<<"Cancelled.\n"; parcelClosed(id.c_str(),"Cancelled"); }
+                else std::cout<<"Cancel failed: check ID or status.\n";
             } else if(choice==8) {
-                std::string id; std::cout<<"Parcel ID reported missing: "; std::getline(std::cin,id);
-                if(setStatus(id.c_str(),"Missing",false)) { std::cout<<"Parcel marked Missing.\n"; parcelClosed(id.c_str(),"Missing"); }
-                else std::cout<<"Update rejected: parcel not found or already completed.\n";
+                std::string id; std::cout<<"Parcel ID: "; std::getline(std::cin,id);
+                if(setStatus(id.c_str(),"Missing",false)) { std::cout<<"Marked missing.\n"; parcelClosed(id.c_str(),"Missing"); }
+                else std::cout<<"Update failed: check ID or status.\n";
             } else if(choice==9) {
-                std::string id; std::cout<<"Parcel ID to remove: "; std::getline(std::cin,id);
-                std::cout<<(removeParcel(id.c_str())?"Parcel removed.\n":"Removal rejected: parcel has an active request or is not Registered/Cancelled.\n");
+                std::string id; std::cout<<"Parcel ID: "; std::getline(std::cin,id);
+                std::cout<<(removeParcel(id.c_str())?"Parcel removed.\n":"Remove failed: active request or invalid status.\n");
             } else if(choice==10) {
-                std::cout<<"Registered arrivals:\n"; displayStatus("Registered");
-                std::cout<<"Recipient collection:\n"; displayStatus("Prepared for Collection");
-                std::cout<<"Campus delivery:\n"; displayStatus("Assigned for Delivery");
+                std::cout<<"Registered:\n"; displayStatus("Registered");
+                std::cout<<"Collection:\n"; displayStatus("Prepared for Collection");
+                std::cout<<"Delivery:\n"; displayStatus("Assigned for Delivery");
                 std::cout<<"Special handling:\n"; displayStatus("Special Handling");
-                std::cout<<"Return to sender:\n"; displayStatus("Return to Sender");
+                std::cout<<"Returns:\n"; displayStatus("Return to Sender");
                 std::cout<<"On hold:\n"; displayStatus("On Hold");
             }
         } while(choice!=0);
@@ -462,7 +461,7 @@ public:
 inline bool parcelExists(const char* id) { Task1ParcelManager p; return p.load()&&p.exists(id); }
 inline bool getParcelRecipient(const char* id,char* out) { Task1ParcelManager p; return p.load()&&p.recipient(id,out); }
 inline bool getParcelStatus(const char* id,char* out) { Task1ParcelManager p; return p.load()&&p.status(id,out); }
-// Task 2 owns the request, so its parcel updates are logged as not reversible
+// Task 2 owns the request, so its parcel updates are logged as not revsible
 inline void updateParcelStatus(const char* id,const char* value) { Task1ParcelManager p; if(p.load()) p.setStatus(id,value,false); }
 
 #endif
