@@ -37,9 +37,7 @@ status.
 */
 // https://codesignal.com/learn/courses/fundamental-data-structures-stacks-and-queues-in-cpp/lessons/understanding-and-implementing-stacks-in-cpp
 
-/*=================================
-    CUSTOM STACK NODE FOR UNDO
-==================================*/
+/*  CUSTOM STACK NODE FOR UNDO*/
 struct UndoNode {
     int activityID;
     string parcelID;
@@ -68,13 +66,13 @@ private:
 public:
     UndoStack() { topNode = NULL; }
 
-    bool isEmpty() { return topNode == NULL; }
+    bool isEmpty() { return topNode == NULL; } //when stack empty return nothing
 
     void push(int id, string pId, string act, string prev, string nSt) {
         UndoNode* newNode = new UndoNode(id, pId, act, prev, nSt);
         newNode->next = topNode;
         topNode = newNode;
-    }
+    } //into the stack
 
     UndoNode pop() {
         if (isEmpty()) return UndoNode(-1, "", "", "", "");
@@ -84,7 +82,7 @@ public:
         delete temp;
         return val;
     }
-
+//take out from stack
     UndoNode peek() {
         if (isEmpty()) return UndoNode(-1, "", "", "", "");
         return *topNode;
@@ -101,7 +99,7 @@ private:
 public:
     ActivityManager() {}
 
-    // Hydrate stack from activity.txt on startup
+    // From activity.txt load up everything
     void loadUndoStackFromFile() {
         ifstream file("activity.txt");
         if (!file) return;
@@ -109,7 +107,7 @@ public:
         string line;
         while (getline(file, line)) {
             if (line.empty()) continue;
-
+//strtoksplits a null‑terminated char array into tokens using specified delimiter characters, modifying the original string and maintaining internal state across calls.
             char buffer[300];
             strcpy(buffer, line.c_str());
             char* fields[10];
@@ -181,7 +179,7 @@ public:
             cout << "\n[Exception] Invalid Parcel State. Current status (" << currentStatus 
                  << ") differs from log (" << topItem.newStatus << "). Undo Rejected.\n";
             return;
-        }
+        } //this is important and the updated ones will turn to irreversible? but state not right
 
         // Apply rollback status via Task 1 transition rules
         if (!task1Mgr.setStatus(topItem.parcelID.c_str(), topItem.previousStatus.c_str())) {
@@ -191,7 +189,7 @@ public:
 
         undoStack.pop();
 
-        // Log the reversal
+        // Log the reversal if can be done
         recordActivity(topItem.parcelID, "UNDO - " + topItem.action, topItem.newStatus, topItem.previousStatus, false, true);
 
         cout << "\nUndo Successful! Parcel " << topItem.parcelID 
