@@ -28,7 +28,7 @@ const int returned=5;
 
 // priority rule
 // special = 4, delivery = 3, return = 2, collection = 1, plus 4 if urgent
-// same priority then the earlier request goes first (first one found in the scan)
+// same priority then the go earlier request , first one found in the scan
 
 struct serviceRequest {
     char requestId[10];       // REQxxx
@@ -52,7 +52,7 @@ struct requestQueue {
         size = 0;
     }
     bool isEmpty() {
-        return size == 0;
+        return size ==0;
     }
 
     bool isFull() {
@@ -62,11 +62,12 @@ struct requestQueue {
     //add at the rear, no sorting here
     bool enqueue(serviceRequest req) {
         if(isFull()) {
-            cout << "Request list is Full! Cannot add more requests." << endl;
+            cout << "Request list is Full! Cannot add more requests."<< endl;
             return false;
         }
         arr[size] = req;
         size++;
+
         return true;
 
     }
@@ -74,12 +75,13 @@ struct requestQueue {
     // Scan all and return the index of the highest priority request
     int findHighest() {
         int i, best;
+
         if(isEmpty()) {
             return -1;
 
         }
         best = 0;
-        for (i=1;i<size;i++){
+        for (i=1 ; i<size; i++){
             if (arr[i].priority>arr[best].priority){
                 best = i;
             }
@@ -103,7 +105,8 @@ struct requestQueue {
     serviceRequest removeAt(int index) {
         int i;
         serviceRequest removed = arr[index];
-        for (i = index;i<size-1;i++){
+
+        for (i = index ; i<size-1;i++){
             arr[i] = arr[i+1];
         }
         size--;
@@ -145,7 +148,7 @@ void copyText(char* to,const char* from,int size) {
     to[size-1] = '\0';
 }
 
-// Remove the \r that files can leave at the end of a line
+// Remove the \r 
 void cutReturn(char* text) {
     int len = strlen(text);
     if(len>0 && text[len-1]=='\r'){
@@ -222,13 +225,12 @@ void timeNow(char* text) {
     strftime(text, 20,"%Y-%m-%d %H:%M",t);
 }
 
-//include task 4 here apparently
-
 
 //one request in one line
 void showRequest(serviceRequest r){
     const char* urgentText = "Normal";
-    if(r.isUrgent == 1){
+
+    if( r.isUrgent == 1){
         urgentText = "Urgent";
     }
     cout << r.requestId << " | " << r.parcelId << " | " << r.recipientName << " | " << service(r.serviceType)
@@ -239,8 +241,10 @@ void showRequest(serviceRequest r){
 //details of one request
 void showDetails(serviceRequest r){
     const char* urgentText = "No";
+
     if (r.isUrgent == 1) {
         urgentText = "Yes";
+
     }
     cout << "Request ID    : " << r.requestId << endl;
     cout << "Parcel ID     : " << r.parcelId << endl;
@@ -253,6 +257,7 @@ void showDetails(serviceRequest r){
     cout << "Status        : " << status(r.status) << endl;
     cout << "Resource ID   : " << r.resourceId << endl;
     cout << "Remark        : " << r.remark << endl;
+
 }
 
 // main operations
@@ -268,11 +273,12 @@ void createRequest() {
     int i;
 
     if(activeRequests.isFull()){
-        cout << "Request list is Full! Cannot create more requests." << endl;
+        cout << "Request list is Full! Cannot create more requests."<< endl;
         return;
     }
 
     cout << "Enter Parcel ID: ";
+
     readText(parcelId, 10);
     if(strlen(parcelId)==0) {
         cout << "Parcel ID cannot be empty." << endl;
@@ -294,7 +300,7 @@ void createRequest() {
     }
 
     // one parcel only one active request
-    for (i=0;i<activeRequests.size;i++){
+    for (i=0; i < activeRequests.size ; i++){
         if(strcmp(activeRequests.arr[i].parcelId,parcelId)==0){
             cout << "This parcel already has an active request (" << activeRequests.arr[i].requestId << ")." << endl;
             return;
@@ -304,6 +310,7 @@ void createRequest() {
     cout << "Enter recipient name: ";
     readText(name,50);
     getParcelRecipient(parcelId, realName);
+
     if(strcmp(name,realName) != 0){
         cout << "Recipient name does not match the parcel record." << endl;
         return;
@@ -366,7 +373,7 @@ void displayActiveRequests() {
     }
     cout << "\nActive requests (arrival order)" << endl;
 
-    for(i=0;i<activeRequests.size;i++) {
+    for(i=0; i <activeRequests.size ; i++) {
         showRequest(activeRequests.arr[i]);
     }
 }
@@ -406,7 +413,7 @@ void finishRequest(int index){
     if(result==0) {
         return;
     }
-    if(result<1||result>3) {
+    if(result<1||result> 3) {
         cout << "Invalid choice, nothing changed." << endl;
         return;
     }
@@ -434,6 +441,7 @@ void finishRequest(int index){
         }
         cout << "Enter recipient name: ";
         readText(name, 50);
+
         if(strcmp(name, realName) != 0){
             cout << "Recipient name does not match, request not finished." << endl;
             return;
@@ -590,7 +598,7 @@ void cancelRequest() {
     cout << "Request " << req.requestId << " cancelled." << endl;
     saveRequests();
 
-    // Task 4 history, not reversible for the same reason as finishRequest
+    // Task 4 history, not reversible
     if (!getParcelStatus(req.parcelId,parcelStatus))
         strcpy(parcelStatus,"Unknown");
 
@@ -646,7 +654,7 @@ bool unassignResource(const char* requestId) {
     return true;
 }
 
-//if parcel was cancelled/ reported missing active request must stop too
+//if parcel was cancelled/ missing active request must stop too
 void parcelClosed(const char* id,const char* reason){
     int i;
     int index = -1;
@@ -795,10 +803,10 @@ void saveRequests(){
     }
     file << "RequestID|ParcelID|RecipientName|ServiceType|Urgent|Priority|RequestTime|Status|ResourceID|Remark" << endl;
 
-    for (i=0;i<activeRequests.size;i++){
+    for (i=0; i<activeRequests.size; i++){
         writeRequest(file, activeRequests.arr[i]);
     }
-    for (i=0;i<finishedCount;i++){
+    for (i=0; i<finishedCount; i++){
         writeRequest(file,finishedRequests[i]);
 
     }
