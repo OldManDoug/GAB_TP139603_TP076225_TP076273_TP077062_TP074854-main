@@ -46,16 +46,60 @@ class Task1ParcelManager {
     }
     static bool validRecipient(const std::string& value) {
         if (!validText(value) || value.size() >= 50) return false;
-        for (std::size_t i=0; i<value.size(); ++i) {
+        bool hasLetter=false;
+        for (std::size_t i=0;i<value.size();++i) {
             unsigned char c=static_cast<unsigned char>(value[i]);
-            if (std::isalpha(c) || c>=128) return true;
+            if (std::isalpha(c) || c>=128) hasLetter=true;
+            else if (c!=' ' && c!='-' && c!=39 && c!='.') return false;
         }
+        return hasLetter;
+    }
+    static bool validAddress(const std::string& value) {
+        if (!validText(value) || value.size()>150) return false;
+        for (std::size_t i=0;i<value.size();++i) {
+            unsigned char c=static_cast<unsigned char>(value[i]);
+            if (std::isalnum(c) || c>=128) return true;
+        }
+        return false;
+    }
+    static bool validPostcode(const std::string& value) {
+        if (value.size()!=5) return false;
+        for (std::size_t i=0;i<value.size();++i)
+            if (!std::isdigit(static_cast<unsigned char>(value[i]))) return false;
+        return true;
+    }
+    static bool validParcelType(const std::string& value) {
+        const char* allowed[]={"Normal","Fragile","Perishable","Live Animal","Document"};
+        for (int i=0;i<5;++i) if (value==allowed[i]) return true;
         return false;
     }
     static bool validWeight(const std::string& value) {
         char* end=NULL;
         double weight=std::strtod(value.c_str(),&end);
         return end!=value.c_str() && *end=='\0' && weight>0.0 && std::isfinite(weight);
+    }
+    static int readDigits(const std::string& value,std::size_t start,std::size_t length) {
+        int number=0;
+        for (std::size_t i=0;i<length;++i) {
+            char c=value[start+i];
+            if (c<'0'||c>'9') return -1;
+            number=number*10+(c-'0');
+        }
+        return number;
+    }
+    static bool validArrival(const std::string& value) {
+        if (value.size()!=16 || value[4]!='-' || value[7]!='-' ||
+            value[10]!=' ' || value[13]!=':') return false;
+        int year=readDigits(value,0,4), month=readDigits(value,5,2);
+        int day=readDigits(value,8,2), hour=readDigits(value,11,2);
+        int minute=readDigits(value,14,2);
+        if (year<1900 || month<1 || month>12 || hour<0 || hour>23 ||
+            minute<0 || minute>59 || day<1) return false;
+        const int daysInMonth[]={31,28,31,30,31,30,31,31,30,31,30,31};
+        int maxDay=daysInMonth[month-1];
+        bool leap=(year%400==0)||(year%4==0&&year%100!=0);
+        if (month==2 && leap) maxDay=29;
+        return day<=maxDay;
     }
     static bool parse(const std::string& line, Task1Parcel& p) {
         std::string fields[10];
@@ -70,7 +114,10 @@ class Task1ParcelManager {
         p.id=fields[0]; p.recipient=fields[1]; p.address=fields[2]; p.postcode=fields[3];
         p.sender=fields[4]; p.content=fields[5]; p.weight=fields[6]; p.type=fields[7];
         p.arrival=fields[8]; p.status=fields[9];
-        return validRecipient(p.recipient) && validWeight(p.weight) && validStatus(p.status);
+        return p.id.size()<10 && validRecipient(p.recipient) && validAddress(p.address) &&
+            validPostcode(p.postcode) && validAddress(p.sender) && validText(p.content) &&
+            validWeight(p.weight) && validParcelType(p.type) && validArrival(p.arrival) &&
+            validStatus(p.status);
     }
     static bool validStatus(const std::string& value) {
         const char* allowed[]={"Registered","Prepared for Collection","Assigned for Delivery",
@@ -83,18 +130,46 @@ class Task1ParcelManager {
         for (Task1ParcelNode* n=head;n;n=n->next) if (n->data.id==id) return n;
         return NULL;
     }
+    static void destroyChain(Task1ParcelNode* node) {
+        while (node) { Task1ParcelNode* next=node->next; delete node; node=next; }
+    }
+    bool generateNextId(char* buffer,std::size_t capacity) const {
+        unsigned long largest=0;
+        for (Task1ParcelNode* n=head;n;n=n->next) {
+            const std::string& id=n->data.id;
+            if (id.size()<2 || id[0]!='P') continue;
+            bool numeric=true;
+            for (std::size_t i=1;i<id.size();++i)
+                if (id[i]<'0'||id[i]>'9') { numeric=false; break; }
+            if (!numeric) continue;
+            unsigned long value=std::strtoul(id.c_str()+1,NULL,10);
+            if (value>largest) largest=value;
+        }
+        if (largest>=99999999UL || capacity<10) return false;
+        unsigned long next=largest+1;
+        while (next<=99999999UL) {
+            std::sprintf(buffer,"P%03lu",next);
+            if (!find(buffer)) return true;
+            ++next;
+        }
+        return false;
+    }
     bool save() const {
         const std::string temp="parcel.txt.tmp";
-        {
-            std::ofstream out(temp.c_str(),std::ios::trunc);
-            if (!out) return false;
-            out << header() << '\n';
-            for (Task1ParcelNode* n=head;n;n=n->next) {
-                const Task1Parcel& p=n->data;
-                out<<p.id<<'|'<<p.recipient<<'|'<<p.address<<'|'<<p.postcode<<'|'<<p.sender
-                   <<'|'<<p.content<<'|'<<p.weight<<'|'<<p.type<<'|'<<p.arrival<<'|'<<p.status<<'\n';
-            }
-            if (!out) return false;
+        std::ofstream out(temp.c_str(),std::ios::trunc);
+        if (!out) return false;
+        out << header() << '\n';
+        for (Task1ParcelNode* n=head; n; n=n->next) {
+            const Task1Parcel& p=n->data;
+            out<<p.id<<'|'<<p.recipient<<'|'<<p.address<<'|'<<p.postcode<<'|'<<p.sender
+               <<'|'<<p.content<<'|'<<p.weight<<'|'<<p.type<<'|'<<p.arrival<<'|'<<p.status<<'\n';
+        }
+        out.flush();
+        bool writeSucceeded=out.good();
+        out.close();
+        if (!writeSucceeded || out.fail()) {
+            std::remove(temp.c_str());
+            return false;
         }
 #ifdef _WIN32
         if (MoveFileExA(temp.c_str(),"parcel.txt",MOVEFILE_REPLACE_EXISTING|MOVEFILE_WRITE_THROUGH)) return true;
@@ -152,18 +227,40 @@ public:
         if (!std::getline(in,first)) return false;
         if (!first.empty() && first.back()=='\r') first.pop_back();
         if (first!=header()) return false;
-        clear();
+
+        // Build a separate list so a malformed or unreadable file cannot erase
+        // the manager's currently loaded records.
+        Task1ParcelNode* loadedHead=NULL;
+        Task1ParcelNode* loadedTail=NULL;
+        int loadedCount=0;
         while (std::getline(in,line)) {
             if (!line.empty() && line.back()=='\r') line.pop_back();
             if (line.empty()) continue;
-            Task1Parcel p;
-            if (!parse(line,p) || find(p.id)) { clear(); return false; }
-            Task1ParcelNode* n=new Task1ParcelNode(p);
-            if (!head) head=n;
-            else { Task1ParcelNode* tail=head; while(tail->next) tail=tail->next; tail->next=n; }
-            ++count;
+            Task1Parcel parcel;
+            if (!parse(line,parcel)) {
+                destroyChain(loadedHead);
+                return false;
+            }
+            for (Task1ParcelNode* n=loadedHead;n;n=n->next) {
+                if (n->data.id==parcel.id) {
+                    destroyChain(loadedHead);
+                    return false;
+                }
+            }
+            Task1ParcelNode* node=new Task1ParcelNode(parcel);
+            if (loadedTail) loadedTail->next=node; else loadedHead=node;
+            loadedTail=node;
+            ++loadedCount;
         }
-        return in.eof();
+        if (in.bad() || !in.eof()) {
+            destroyChain(loadedHead);
+            return false;
+        }
+
+        clear();
+        head=loadedHead;
+        count=loadedCount;
+        return true;
     }
     // Read-only snapshot interface for Task 5's tree index. File order stays intact.
     template <typename Visitor>
@@ -171,7 +268,7 @@ public:
         for (Task1ParcelNode* n=head; n; n=n->next) visit(n->data);
     }
     bool updateCategory(const char* id, const std::string& category) {
-        if (!id || !validText(category)) return false;
+        if (!id || !validParcelType(category)) return false;
         Task1ParcelNode* n=find(id);
         if (!n || isTerminal(n->data.status)) return false;
         std::string old=n->data.type;
@@ -214,11 +311,11 @@ public:
 
     }
     bool registerParcel(const Task1Parcel& input,std::string& assignedId) {
-        if (!validRecipient(input.recipient)||!validText(input.address)||!validText(input.postcode)||
-            !validText(input.sender)||!validText(input.content)||!validWeight(input.weight)||
-            !validText(input.type)||!validText(input.arrival)) return false;
-        char id[24]; int number=count+1;
-        do { std::sprintf(id,"P%03d",number++); } while(find(id));
+        if (!validRecipient(input.recipient)||!validAddress(input.address)||!validPostcode(input.postcode)||
+            !validAddress(input.sender)||!validText(input.content)||!validWeight(input.weight)||
+            !validParcelType(input.type)||!validArrival(input.arrival)) return false;
+        char id[10];
+        if (!generateNextId(id,sizeof(id))) return false;
         Task1Parcel p=input; p.id=id; p.status="Registered";
         Task1ParcelNode* n=new Task1ParcelNode(p);
         if (!head) head=n;
@@ -231,7 +328,7 @@ public:
     }
     bool updateDetails(const char* id,const std::string& recipientName,const std::string& address,
                        const std::string& postcode) {
-        if (!id||!validRecipient(recipientName)||!validText(address)||!validText(postcode)) return false;
+        if (!id||!validRecipient(recipientName)||!validAddress(address)||!validPostcode(postcode)) return false;
         Task1ParcelNode* n=find(id);
         if (!n || isTerminal(n->data.status)) return false;
         Task1Parcel old=n->data;
@@ -241,7 +338,6 @@ public:
     }
     bool removeParcel(const char* id) {
         if (!id||!*id) return false;
-        if (parcelActiveRequest(id)) return false;
         Task1ParcelNode *prev=NULL,*n=head;
         while(n&&n->data.id!=id) { prev=n; n=n->next; }
         if (!n || parcelActiveRequest(id) || (n->data.status!="Registered"&&n->data.status!="Cancelled")) return false;
@@ -348,9 +444,7 @@ public:
                 else std::cout<<"Update rejected: parcel not found or already completed.\n";
             } else if(choice==9) {
                 std::string id; std::cout<<"Parcel ID to remove: "; std::getline(std::cin,id);
-// Task 2 integration: active-request checks and request closure for terminal parcel actions.
-bool parcelActiveRequest(const char* id);
-void parcelClosed(const char* id,const char* reason);
+                std::cout<<(removeParcel(id.c_str())?"Parcel removed.\n":"Removal rejected: parcel has an active request or is not Registered/Cancelled.\n");
             } else if(choice==10) {
                 std::cout<<"Registered arrivals:\n"; displayStatus("Registered");
                 std::cout<<"Recipient collection:\n"; displayStatus("Prepared for Collection");
