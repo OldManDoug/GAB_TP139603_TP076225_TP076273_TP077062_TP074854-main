@@ -7,9 +7,7 @@
 using namespace std;
 bool parcelActiveRequest(const char* id);
 
-// Custom AVL tree Each node stores the complete parcel.
-// Parcel ID is unique and immutable. Categories may contain many parcels.
-class Task5ParcelTree {
+class Task5ParcelTree { // 	Implements the tree: stores parcels, searches IDs, inserts, removes and balances nodes.
     struct Node {
         Task1Parcel parcel;
         Node *left, *right;
@@ -58,7 +56,7 @@ class Task5ParcelTree {
         if (!n) { inserted=true; return new Node(p); }
         if (p.id<n->parcel.id) n->left=insertNode(n->left,p,inserted);
         else if (p.id>n->parcel.id) n->right=insertNode(n->right,p,inserted);
-        else return n; // Duplicate ID: retain the original record.
+        else return n; 
         return balance(n);
     }
     static Node* removeNode(Node* n, const string& id) {
@@ -71,7 +69,7 @@ class Task5ParcelTree {
                 delete n;
                 return child;
             }
-            // Two children: replace with the smallest record in the right subtree.
+            
             Node* successor=n->right;
             while (successor->left) successor=successor->left;
             n->parcel=successor->parcel;
@@ -88,7 +86,7 @@ class Task5ParcelTree {
         if (!n) return;
         traverse(n->left,visit); visit(n->parcel); traverse(n->right,visit);
     }
-    // Verify ordering, height and AVL balance for demo/tests.
+    // Verifies ordering, height and AVL balance for demo/tests.
     static bool check(Node* n, const string* low, const string* high) {
         if (!n) return true;
         int a=height(n->left), b=height(n->right);
@@ -156,8 +154,7 @@ class Task5ParcelManager {
         });
     }
 public:
-    Task5ParcelManager() : ready(false) {}
-    // Recreate on entry: all changes from Tasks 1/2/4 become visible.
+    Task5ParcelManager() : ready(false) {} //Connects the tree to the menu and Task 1 shared parcel records.
     bool load() {
         ready=false;
         tree.clear();
@@ -168,11 +165,9 @@ public:
     }
     const Task5ParcelTree& index() const { return tree; }
     bool insertParcel(const Task1Parcel& p, string& id) {
-        // Task 1 assigns a unique ID and the exact initial status Registered.
+        //assigns unique ID and the exact initial status Registered.
         if (!ready || !records.registerParcel(p,id)) return false;
         refreshRecord(id);
-//IMPLEMENTATION: Log activity for Task 4 audit trail
-        // not reversible: Task 4 undo restores a parcel status, and "None" is not a status
         recordActivity(id, "Parcel Registered", "None", "Registered", false);
 
         return true;
@@ -181,8 +176,6 @@ public:
         if (!ready || !tree.find(id)) return false;
         string oldCategory=tree.find(id)->type;
         if (!records.updateCategory(id.c_str(),category)) return false;
-        // IMPLEMENTATION: Log activity for Task 4 audit trail
-        // not reversible: a category is not a parcel status, so Task 4 undo cannot restore it
         recordActivity(id, "Category Update", oldCategory, category, false);
         refreshRecord(id); return true;
 
@@ -192,15 +185,12 @@ public:
         if (!ready || !tree.find(id)) return false;
         string oldDetails=tree.find(id)->recipient + " / " + tree.find(id)->address;
         if (!records.updateDetails(id.c_str(),name,address,postcode)) return false;
-       // IMPLEMENTATION: Log activity for Task 4 audit trail
         recordActivity(id, "Details Update", oldDetails, name + " / " + address, false);
-        //AFTER DOING THIS refreshes to show it displayed
         refreshRecord(id); return true;
     }
     bool removeParcel(const string& id, string& reason) {
         if (!ready) { reason="Parcel file is not loaded."; return false; }
         if (!tree.find(id)) { reason="Parcel not found."; return false; }
-        // Required Task 2 guard BEFORE touching the file or tree.
         if (parcelActiveRequest(id.c_str())) {
             reason="Parcel has an active service request. Finish or cancel it in Task 2 first.";
             return false;
@@ -209,7 +199,6 @@ public:
             reason="Only Registered or Cancelled parcels can be removed; also check file write access.";
             return false;
         }
-        // IMPLEMENTATION: Log activity for Task 4 audit trail (Usually non-reversible or terminal)
         recordActivity(id, "Parcel Removed", "Registered/Cancelled", "Removed", false);
         tree.remove(id);
         reason.clear(); return true;
